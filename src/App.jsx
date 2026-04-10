@@ -306,7 +306,14 @@ export default function App() {
 // ── 게임 본체 ──────────────────────────────────────────────
 function GameApp({ accountId, nickname, initialState, onLogout }) {
   const merged = { ...INITIAL_STATE, ...(initialState || {}) };
-  const safeState = VALID_SCREENS.has(merged.screen) ? merged : { ...merged, screen: 'main' };
+  const safeState = {
+    ...merged,
+    // 포획 화면은 세션 복원 시 항상 메인으로 리셋 (wildPokemon 무한 포획 버그 방지)
+    screen: merged.screen === 'capture' ? 'main' : (VALID_SCREENS.has(merged.screen) ? merged.screen : 'main'),
+    wildPokemon: null,
+    captureResult: null,
+    captureFailStreak: 0,
+  };
 
   const [state, dispatch] = useReducer(gameReducer, safeState);
   const saveTimer = useRef(null);
