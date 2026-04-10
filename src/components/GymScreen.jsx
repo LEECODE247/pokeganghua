@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGame } from '../App.jsx';
 import { GYM_CONFIG, MAP_CONFIG } from '../data/pokemonData.js';
 import {
@@ -6,12 +6,22 @@ import {
   calculatePower, formatCoins, formatCooldown,
 } from '../utils/gameUtils.js';
 
+// 체육관별 대표 포켓몬 (관장)
+const GYM_LEADER_POKEMON = {
+  forest: 3,   // 이상해꽃
+  river:  9,   // 거북왕
+  cave:   76,  // 딱구리
+  sky:    6,   // 리자몽
+};
+
 export default function GymScreen() {
   const { state, dispatch } = useGame();
   const { gymMap, gymSelectedPokemonId, gymBattleResult, gymCooldowns, inventory } = state;
 
   const [now, setNow] = useState(Date.now());
   const [battling, setBattling] = useState(false);
+  const [gymAnim, setGymAnim] = useState(null); // { step, myHp, oppHp, won }
+  const gymTimers = useRef([]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -34,15 +44,42 @@ export default function GymScreen() {
   function startBattle() {
     if (!canEnter || onCooldown || battling || !selectedPokemon) return;
     setBattling(true);
-    setTimeout(() => {
+
+    // 결과 미리 계산
+    const won = Math.random() * 100 < winChance;
+
+    const addTimer = (fn, ms) => {
+      const t = setTimeout(fn, ms);
+      gymTimers.current.push(t);
+    };
+
+    // step: 0=입장, 1=공격, 2=반격, 3=결정타, 4=결과
+    setGymAnim({ step: 0, myHp: 100, oppHp: 100, won });
+    addTimer(() => setGymAnim(f => ({ ...f, step: 1 })), 700);
+    addTimer(() => setGymAnim(f => ({
+      ...f, step: 2,
+      oppHp: won ? Math.max(10, 60 - Math.round((playerPower / gym.gymPower) * 40)) : 75,
+    })), 1400);
+    addTimer(() => setGymAnim(f => ({
+      ...f, step: 3,
+      myHp: won ? 65 : Math.max(5, 40 - Math.round((gym.gymPower / playerPower) * 10)),
+    })), 2100);
+    addTimer(() => setGymAnim(f => ({
+      ...f, step: 4,
+      oppHp: won ? 0 : f.oppHp,
+      myHp:  won ? f.myHp : 0,
+    })), 2800);
+    addTimer(() => {
       dispatch({
         type: 'GYM_BATTLE_RESOLVE',
         playerPower,
         gymPower: gym.gymPower,
         gymReward: gym.reward,
       });
+      setGymAnim(null);
       setBattling(false);
-    }, 1500);
+      gymTimers.current = [];
+    }, 4000);
   }
 
   return (
@@ -204,6 +241,85 @@ export default function GymScreen() {
           </div>
         )}
       </div>
+
+      {/* 체육관 전투 애니메이션 오버레이 */}
+      {gymAnim && selectedPokemon && (
+        <div className="battle-anim-overlay">
+          {gymAnim.step < 4 && (
+            <>
+              <div className="battle-round-text" key={gymAnim.step}>
+                {gymAnim.step === 0 && `⚔️ ${gym.name} 도전!`}
+                {gymAnim.step === 1 && '💥 공격!'}
+                {gymAnim.step === 2 && '💢 반격!'}
+                {gymAnim.step === 3 && '⚡ 결정타!'}
+              </div>
+              <div className="battle-stage">
+                {/* 내 포켓몬 */}
+                <div className="battle-pokemon-wrap">
+                  <img
+                    src={getPokemonImageUrl(selectedPokemon.pokemonId)}
+                    className={`battle-pokemon-img ${gymAnim.step === 1 || gymAnim.step === 3 ? 'attack-right' : gymAnim.step === 2 ? 'hit' : ''}`}
+                    alt=""
+                    key={`my-${gymAnim.step}`}
+                  />
+                  <div className="battle-hp-bar-wrap">
+                    <div className="battle-hp-bar" style={{ width: `${gymAnim.myHp}%`, background: gymAnim.myHp > 50 ? '#4caf50' : gymAnim.myHp > 20 ? '#FFD700' : '#ef5350' }} />
+                  </div>
+                  <div className="battle-label">나</div>
+                </div>
+
+                <div className="battle-vs-text">VS</div>
+
+                {/* 체육관 대표 포켓몬 */}
+                <div className="battle-pokemon-wrap">
+                  <img
+                    src={getPokemonImageUrl(GYM_LEADER_POKEMON[gymMap])}
+                    className={`battle-pokemon-img ${gymAnim.step === 2 ? 'attack-left' : gymAnim.step === 1 || gymAnim.step === 3 ? 'hit' : ''}`}
+                    alt=""
+                    key={`opp-${gymAnim.step}`}
+                    style={{ transform: 'scaleX(-1)' }}
+                  />
+                  <div className="battle-hp-bar-wrap">
+                    <div className="battle-hp-bar" style={{ width: `${gymAnim.oppHp}%`, background: gymAnim.oppHp > 50 ? '#4caf50' : gymAnim.oppHp > 20 ? '#FFD700' : '#ef5350' }} />
+                  </div>
+                  <div className="battle-label">{gym.name} 관장</div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {gymAnim.step === 4 && (
+            <>
+              <div className="battle-result-reveal" style={{ color: gymAnim.won ? '#4caf50' : '#ef5350' }}>
+                {gymAnim.won ? '🏆 승리!' : '💀 패배'}
+              </div>
+              <div className="battle-stage">
+                <div className="battle-pokemon-wrap">
+                  <img
+                    src={getPokemonImageUrl(selectedPokemon.pokemonId)}
+                    className={`battle-pokemon-img ${gymAnim.won ? 'winner' : 'loser'}`}
+                    alt=""
+                  />
+                </div>
+                <div className="battle-vs-text" style={{ color: 'var(--text2)' }}>VS</div>
+                <div className="battle-pokemon-wrap">
+                  <img
+                    src={getPokemonImageUrl(GYM_LEADER_POKEMON[gymMap])}
+                    className={`battle-pokemon-img ${gymAnim.won ? 'loser' : 'winner'}`}
+                    alt=""
+                    style={{ transform: 'scaleX(-1)' }}
+                  />
+                </div>
+              </div>
+              {gymAnim.won && (
+                <div style={{ color: '#FFD700', fontWeight: 800, fontSize: '1.3rem' }}>
+                  +🪙{formatCoins(gym.reward)}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* 배틀 결과 오버레이 */}
       {gymBattleResult && (
