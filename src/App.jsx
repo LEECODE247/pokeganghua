@@ -1,6 +1,6 @@
 import React, { useReducer, useEffect, useState, useRef, createContext, useContext } from 'react';
 import { generateWildPokemon, calculateSellPrice, getEnhanceRate, getEnhanceFailEffect, getEnhanceCost } from './utils/gameUtils.js';
-import { BALL_CONFIG } from './data/pokemonData.js';
+import { BALL_CONFIG, POKEMON_NAMES } from './data/pokemonData.js';
 import { loadGameState, saveGameState } from './supabase.js';
 import HUD from './components/HUD.jsx';
 import MainScreen from './components/MainScreen.jsx';
@@ -9,6 +9,7 @@ import InventoryScreen from './components/InventoryScreen.jsx';
 import EnhancementScreen from './components/EnhancementScreen.jsx';
 import GymScreen from './components/GymScreen.jsx';
 import BattleScreen from './components/BattleScreen.jsx';
+import PokedexScreen from './components/PokedexScreen.jsx';
 import LoginScreen from './components/LoginScreen.jsx';
 
 export const GameContext = createContext(null);
@@ -37,6 +38,8 @@ const INITIAL_STATE = {
   lastCoinClaim: 0,
   dailyBattleCount: 0,
   battleResetDate: '',
+  pokedex: [],
+  pokedexRewarded: false,
 };
 
 function gameReducer(state, action) {
@@ -66,6 +69,10 @@ function gameReducer(state, action) {
       const result    = roll < catchRate ? 'success' : roll < catchRate + 0.18 ? 'near-miss' : 'fail';
       const captured  = result === 'success';
 
+      const newPokedex = captured && !state.pokedex.includes(state.wildPokemon.pokemonId)
+        ? [...state.pokedex, state.wildPokemon.pokemonId]
+        : state.pokedex;
+
       return {
         ...state,
         coins: state.coins - ballCfg.cost,
@@ -73,6 +80,7 @@ function gameReducer(state, action) {
         captureFailStreak: captured ? 0 : state.captureFailStreak + 1,
         inventory: captured ? [...state.inventory, state.wildPokemon] : state.inventory,
         totalCaptured: captured ? state.totalCaptured + 1 : state.totalCaptured,
+        pokedex: newPokedex,
       };
     }
 
@@ -223,6 +231,12 @@ function gameReducer(state, action) {
     case 'RESET_COINS':
       return { ...state, coins: INITIAL_STATE.coins };
 
+    case 'CLAIM_POKEDEX_REWARD': {
+      const totalPokemon = Object.keys(POKEMON_NAMES).length;
+      if (state.pokedex.length < totalPokemon || state.pokedexRewarded) return state;
+      return { ...state, fragments: state.fragments + 10000, pokedexRewarded: true };
+    }
+
     case 'CLAIM_COINS': {
       const now = Date.now();
       if (now - state.lastCoinClaim < 3600000) return state;
@@ -237,7 +251,7 @@ function gameReducer(state, action) {
   }
 }
 
-const VALID_SCREENS = new Set(['main', 'capture', 'inventory', 'enhancement', 'gym', 'battle']);
+const VALID_SCREENS = new Set(['main', 'capture', 'inventory', 'enhancement', 'gym', 'battle', 'pokedex']);
 
 // ── 세션 저장 (accountId만 로컬에 — 게임 데이터는 Supabase) ──
 function getStoredSession() {
@@ -349,6 +363,7 @@ function GameApp({ accountId, nickname, initialState, onLogout }) {
     enhancement: <EnhancementScreen />,
     gym:         <GymScreen />,
     battle:      <BattleScreen />,
+    pokedex:     <PokedexScreen />,
   };
 
   return (

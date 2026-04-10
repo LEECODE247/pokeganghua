@@ -32,6 +32,7 @@ const NAV = [
   { id: 'enhancement', label: '⚗️ 강화'  },
   { id: 'gym',         label: '🏟️ 체육관' },
   { id: 'battle',      label: '⚔️ 배틀'  },
+  { id: 'pokedex',     label: '📖 도감'   },
 ];
 
 export default function HUD() {
