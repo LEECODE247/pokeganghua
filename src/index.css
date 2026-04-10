@@ -512,3 +512,117 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .pokemon-select-scroll { max-height: 280px; overflow-y: auto; padding-right: 4px; }
 .pokemon-select-scroll::-webkit-scrollbar { width: 4px; }
 .pokemon-select-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── 포획 카운트다운 오버레이 ─────────────────────────────────────────────── */
+.capture-countdown-overlay {
+  position: fixed; inset: 0; z-index: 250;
+  display: flex; align-items: center; justify-content: center; flex-direction: column;
+  background: rgba(0,0,0,0.82); gap: 24px;
+}
+.countdown-ball-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+}
+.countdown-number {
+  font-size: 7rem; font-weight: 900; line-height: 1;
+  animation: countdown-pop 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+  text-shadow: 0 0 40px currentColor;
+}
+.countdown-gotcha {
+  font-size: 3.5rem; font-weight: 900; color: #4caf50;
+  animation: gotcha-burst 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+  text-shadow: 0 0 30px rgba(76,175,80,0.8);
+  letter-spacing: 4px;
+}
+.countdown-escaped {
+  font-size: 3rem; font-weight: 900; color: var(--fail);
+  animation: result-shake 0.5s ease both;
+  text-shadow: 0 0 20px rgba(239,83,80,0.7);
+}
+.countdown-pokeball {
+  font-size: 4rem;
+  animation: pokeball-shake 0.4s ease-in-out infinite;
+}
+
+@keyframes countdown-pop {
+  0%   { transform: scale(2.5); opacity: 0; }
+  60%  { transform: scale(0.9); }
+  100% { transform: scale(1);   opacity: 1; }
+}
+@keyframes gotcha-burst {
+  0%   { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+  60%  { transform: scale(1.15) rotate(2deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* ── 배틀 애니메이션 오버레이 ────────────────────────────────────────────── */
+.battle-anim-overlay {
+  position: fixed; inset: 0; z-index: 250;
+  background: radial-gradient(ellipse at center, #1a0030 0%, #0a0010 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px;
+}
+.battle-stage {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0; width: 100%; max-width: 380px; position: relative;
+}
+.battle-pokemon-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  flex: 1;
+}
+.battle-pokemon-img {
+  width: 100px; height: 100px; object-fit: contain; image-rendering: pixelated;
+}
+.battle-pokemon-img.attack-right {
+  animation: battle-attack-right 0.35s ease-in-out;
+}
+.battle-pokemon-img.attack-left {
+  animation: battle-attack-left 0.35s ease-in-out;
+}
+.battle-pokemon-img.hit {
+  animation: battle-hit 0.3s ease-in-out;
+}
+.battle-pokemon-img.winner { filter: drop-shadow(0 0 16px #FFD700); animation: float 1s ease infinite; }
+.battle-pokemon-img.loser  { opacity: 0.3; filter: grayscale(1); transform: rotate(20deg); }
+
+.battle-vs-text {
+  font-size: 2rem; font-weight: 900; color: #fff;
+  text-shadow: 0 0 20px rgba(255,255,255,0.5);
+  flex-shrink: 0; width: 60px; text-align: center;
+}
+.battle-hp-bar-wrap { width: 100%; height: 6px; background: rgba(255,255,255,0.15); border-radius: 99; overflow: hidden; }
+.battle-hp-bar { height: 100%; border-radius: 99; transition: width 0.5s ease; }
+.battle-label { font-size: 0.7rem; color: rgba(255,255,255,0.6); text-align: center; }
+.battle-attack-flash {
+  position: absolute; inset: 0; border-radius: 12px; pointer-events: none;
+  animation: battle-flash 0.3s ease-out both;
+}
+.battle-round-text {
+  font-size: 1.1rem; font-weight: 800; color: #fff;
+  animation: countdown-pop 0.3s ease both;
+  text-shadow: 0 0 12px rgba(255,255,255,0.5);
+}
+.battle-result-reveal {
+  font-size: 3.5rem; font-weight: 900;
+  animation: gotcha-burst 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+
+@keyframes battle-attack-right {
+  0%   { transform: translateX(0) scale(1); }
+  40%  { transform: translateX(40px) scale(1.15); filter: brightness(2); }
+  100% { transform: translateX(0) scale(1); filter: brightness(1); }
+}
+@keyframes battle-attack-left {
+  0%   { transform: translateX(0) scale(1); }
+  40%  { transform: translateX(-40px) scale(1.15); filter: brightness(2); }
+  100% { transform: translateX(0) scale(1); filter: brightness(1); }
+}
+@keyframes battle-hit {
+  0%   { transform: translateX(0); filter: brightness(1); }
+  25%  { transform: translateX(10px); filter: brightness(3) saturate(0); }
+  50%  { transform: translateX(-8px); }
+  100% { transform: translateX(0); filter: brightness(1); }
+}
+@keyframes battle-flash {
+  0%   { background: rgba(255,255,255,0.4); }
+  100% { background: rgba(255,255,255,0); }
+}

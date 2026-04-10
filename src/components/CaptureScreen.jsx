@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useGame } from '../App.jsx';
 import { BALL_CONFIG } from '../data/pokemonData.js';
 import {
@@ -25,6 +25,8 @@ export default function CaptureScreen() {
   const [thrownBall, setThrownBall] = useState(null);
   const [showResult, setShowResult] = useState(false);
   const [justSold, setJustSold] = useState(false);
+  const [countdown, setCountdown] = useState(null); // 3 | 2 | 1 | 'gotcha' | 'escaped' | null
+  const captureResultRef = useRef(null);
 
   useEffect(() => {
     if (wildPokemon) {
@@ -43,15 +45,30 @@ export default function CaptureScreen() {
     }
   }, [wildPokemon, phase]);
 
+  // captureResult를 ref에 동기화 (setTimeout 클로저에서 최신값 접근용)
   useEffect(() => {
-    if (captureResult && phase === PHASE.SHAKING) {
-      const t = setTimeout(() => {
-        setPhase(PHASE.RESULT);
-        setShowResult(true);
-      }, 1400);
-      return () => clearTimeout(t);
-    }
-  }, [captureResult, phase]);
+    captureResultRef.current = captureResult;
+  }, [captureResult]);
+
+  // 볼이 던져지면 카운트다운 시작
+  useEffect(() => {
+    if (phase !== PHASE.SHAKING) { setCountdown(null); return; }
+
+    setCountdown(3);
+    const t1 = setTimeout(() => setCountdown(2), 800);
+    const t2 = setTimeout(() => setCountdown(1), 1600);
+    const t3 = setTimeout(() => {
+      const r = captureResultRef.current;
+      setCountdown(r === 'success' ? 'gotcha' : 'escaped');
+    }, 2400);
+    const t4 = setTimeout(() => {
+      setPhase(PHASE.RESULT);
+      setShowResult(true);
+      setCountdown(null);
+    }, 3300);
+
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
+  }, [phase]);
 
   const throwBall = useCallback((ballType) => {
     if (phase !== PHASE.READY) return;
@@ -221,6 +238,37 @@ export default function CaptureScreen() {
           </div>
         )}
       </div>
+
+      {/* 카운트다운 오버레이 */}
+      {countdown !== null && (
+        <div className="capture-countdown-overlay">
+          <div className="countdown-ball-wrap">
+            <div className="countdown-pokeball">
+              {thrownBall ? BALL_CONFIG[thrownBall]?.icon : '⚫'}
+            </div>
+            {countdown === 'gotcha' ? (
+              <div className="countdown-gotcha">GOTCHA! 🎉</div>
+            ) : countdown === 'escaped' ? (
+              <div className="countdown-escaped">탈출했다! 💨</div>
+            ) : (
+              <div
+                key={countdown}
+                className="countdown-number"
+                style={{
+                  color: countdown === 3 ? '#fff' : countdown === 2 ? '#FFD700' : '#FF5722',
+                }}
+              >
+                {countdown}
+              </div>
+            )}
+          </div>
+          {countdown !== 'gotcha' && countdown !== 'escaped' && (
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>
+              포켓볼이 흔들리고 있다...
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 결과 오버레이 */}
       {showResult && captureResult && (
