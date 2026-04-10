@@ -119,7 +119,7 @@ export default function CaptureScreen() {
       {captureFailStreak >= 2 && phase !== PHASE.RESULT && (
         <div style={{ textAlign: 'center', marginBottom: 12 }}>
           <span className="streak-badge">
-            🔥 {captureFailStreak}연속 실패! +{captureFailStreak * 5}% 포획률 상승
+            🔥 {captureFailStreak}연속 실패! +{captureFailStreak}% 포획률 상승
           </span>
         </div>
       )}
@@ -167,12 +167,6 @@ export default function CaptureScreen() {
               </span>
             </div>
 
-            <div className="pokemon-stats-row">
-              <div className="stat-item"><span className="stat-label">공격</span><span className="stat-val">{wildPokemon.attack}</span></div>
-              <div className="stat-item"><span className="stat-label">방어</span><span className="stat-val">{wildPokemon.defense}</span></div>
-              <div className="stat-item"><span className="stat-label">체력</span><span className="stat-val">{wildPokemon.hp}</span></div>
-              <div className="stat-item"><span className="stat-label">속도</span><span className="stat-val">{wildPokemon.speed}</span></div>
-            </div>
           </div>
         )}
 
@@ -197,7 +191,7 @@ export default function CaptureScreen() {
               const canAfford = state.coins >= cfg.cost;
               const rarity = wildPokemon?.rarity || 1;
               const baseRate = cfg.rates[rarity] || 0;
-              const streakBonus = captureFailStreak * 0.05;
+              const streakBonus = captureFailStreak * 0.01;
               const displayRate = Math.min(100, Math.round((baseRate + streakBonus) * 100));
 
               return (
@@ -265,7 +259,7 @@ export default function CaptureScreen() {
 
           {captureResult !== 'success' && captureFailStreak > 0 && (
             <div className="result-sub">
-              실패 연속: {captureFailStreak}회 → 다음 시도 +{captureFailStreak * 5}% 상승
+              실패 연속: {captureFailStreak}회 → 다음 시도 +{captureFailStreak}% 상승
             </div>
           )}
 
