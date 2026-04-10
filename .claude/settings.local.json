@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx vite:*)",
+      "Bash(node -e ':*)",
+      "Bash(node --input-type=module -e ':*)",
+      "Bash(npm list:*)",
+      "Bash(npm run:*)",
+      "Bash(node server/index.js)",
+      "Bash(curl -s http://localhost:3001)",
+      "Bash(curl -s http://localhost:3001/socket.io/socket.io.js)",
+      "Bash(npx kill-port:*)",
+      "Bash(echo \"서버 PID: $!\")",
+      "Bash(echo \"Vite PID: $!\")",
+      "Read(//tmp/**)",
+      "Bash(rm:*)",
+      "Bash(ls *.json *.md)",
+      "Bash(npm --prefix D:/Pokemon_Demo run build)"
+    ]
+  }
+}
