@@ -8,6 +8,7 @@ const NAV = [
   { id: 'inventory',   label: '🎒 가방'   },
   { id: 'enhancement', label: '⚗️ 강화'  },
   { id: 'gym',         label: '🏟️ 체육관' },
+  { id: 'battle',      label: '⚔️ 배틀'  },
 ];
 
 export default function HUD() {

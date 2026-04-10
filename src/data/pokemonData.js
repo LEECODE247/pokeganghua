@@ -162,7 +162,7 @@ export const BALL_CONFIG = {
     icon: '⚫',
     cost: 100,
     color: '#ef5350',
-    rates: { 1: 1.00, 2: 0.50, 3: 0.10, 4: 1.0 },
+    rates: { 1: 1.00, 2: 0.50, 3: 0.10, 4: 0.02 },
     description: '기본 볼 — ★4 포획률 2%',
   },
   super: {
@@ -186,14 +186,13 @@ export const BALL_CONFIG = {
     icon: '🟣',
     cost: 100000,
     color: '#ce93d8',
-    rates: { 1: 1.00, 2: 1.00, 3: 1.00, 4: 1.0 },
-    // rates: { 1: 1.00, 2: 1.00, 3: 1.00, 4: 0.50 },
+    rates: { 1: 1.00, 2: 1.00, 3: 1.00, 4: 0.50 },
     description: '★★★ 확정, ★4 포획률 50%',
   },
 };
 
 export const ENHANCE_CONFIG = [
-  { range: [0,  19],  rate: 1.00, fail: 'none',    cost: 500,    protectCost: 0    },
+  { range: [0,  4],  rate: 1.00, fail: 'none',    cost: 500,    protectCost: 0    },
   { range: [5,  9],  rate: 0.70, fail: 'nothing',  cost: 2000,   protectCost: 0    },
   { range: [10, 14], rate: 0.50, fail: 'minus1',   cost: 8000,   protectCost: 0    },
   // +15부터 성공 시 전투력 2배, 실패 시 파괴 (특수재화로 보호 가능)

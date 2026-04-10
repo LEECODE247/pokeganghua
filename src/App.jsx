@@ -8,6 +8,7 @@ import CaptureScreen from './components/CaptureScreen.jsx';
 import InventoryScreen from './components/InventoryScreen.jsx';
 import EnhancementScreen from './components/EnhancementScreen.jsx';
 import GymScreen from './components/GymScreen.jsx';
+import BattleScreen from './components/BattleScreen.jsx';
 import LoginScreen from './components/LoginScreen.jsx';
 
 export const GameContext = createContext(null);
@@ -24,6 +25,7 @@ const INITIAL_STATE = {
   enhancingPokemonId: null,
   enhanceResult: null,
   enhanceFailStack: 0,
+  battlePokemonId: null,
   gymMap: 'forest',
   gymSelectedPokemonId: null,
   gymBattleResult: null,
@@ -131,6 +133,15 @@ function gameReducer(state, action) {
     case 'CLEAR_ENHANCE_RESULT':
       return { ...state, enhanceResult: null };
 
+    case 'REGISTER_BATTLE_POKEMON':
+      return { ...state, battlePokemonId: action.pokemonId };
+
+    case 'BATTLE_WIN':
+      return { ...state, coins: state.coins + action.coins, totalBattles: state.totalBattles + 1, totalWins: state.totalWins + 1 };
+
+    case 'BATTLE_LOSE':
+      return { ...state, totalBattles: state.totalBattles + 1 };
+
     case 'SELL_POKEMON': {
       const pokemon = state.inventory.find(p => p.instanceId === action.pokemonId);
       if (!pokemon) return state;
@@ -138,8 +149,9 @@ function gameReducer(state, action) {
         ...state,
         coins: state.coins + calculateSellPrice(pokemon),
         inventory: state.inventory.filter(p => p.instanceId !== action.pokemonId),
-        enhancingPokemonId:    state.enhancingPokemonId    === action.pokemonId ? null : state.enhancingPokemonId,
-        gymSelectedPokemonId:  state.gymSelectedPokemonId  === action.pokemonId ? null : state.gymSelectedPokemonId,
+        enhancingPokemonId:   state.enhancingPokemonId   === action.pokemonId ? null : state.enhancingPokemonId,
+        gymSelectedPokemonId: state.gymSelectedPokemonId === action.pokemonId ? null : state.gymSelectedPokemonId,
+        battlePokemonId:      state.battlePokemonId      === action.pokemonId ? null : state.battlePokemonId,
       };
     }
 
@@ -154,6 +166,7 @@ function gameReducer(state, action) {
         inventory: state.inventory.filter(p => !idSet.has(p.instanceId)),
         enhancingPokemonId:   idSet.has(state.enhancingPokemonId)   ? null : state.enhancingPokemonId,
         gymSelectedPokemonId: idSet.has(state.gymSelectedPokemonId) ? null : state.gymSelectedPokemonId,
+        battlePokemonId:      idSet.has(state.battlePokemonId)      ? null : state.battlePokemonId,
       };
     }
 
@@ -192,7 +205,7 @@ function gameReducer(state, action) {
   }
 }
 
-const VALID_SCREENS = new Set(['main', 'capture', 'inventory', 'enhancement', 'gym']);
+const VALID_SCREENS = new Set(['main', 'capture', 'inventory', 'enhancement', 'gym', 'battle']);
 
 // ── 세션 저장 (accountId만 로컬에 — 게임 데이터는 Supabase) ──
 function getStoredSession() {
@@ -291,10 +304,11 @@ function GameApp({ accountId, nickname, initialState, onLogout }) {
     inventory:   <InventoryScreen />,
     enhancement: <EnhancementScreen />,
     gym:         <GymScreen />,
+    battle:      <BattleScreen />,
   };
 
   return (
-    <GameContext.Provider value={{ state, dispatch, nickname, onLogout }}>
+    <GameContext.Provider value={{ state, dispatch, nickname, accountId, onLogout }}>
       <div className="app">
         <HUD />
         <div className="screen-container">

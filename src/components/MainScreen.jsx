@@ -85,7 +85,7 @@ export default function MainScreen() {
       </div>
 
       {/* 초기화 버튼 */}
-      <div style={{ textAlign: 'center', marginTop: 16, display: 'flex', gap: 12, justifyContent: 'center' }}>
+      {/* <div style={{ textAlign: 'center', marginTop: 16, display: 'flex', gap: 12, justifyContent: 'center' }}>
         <button
           className="btn btn-gold btn-sm"
           onClick={() => {
@@ -106,7 +106,7 @@ export default function MainScreen() {
         >
           🔄 게임 초기화
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }
