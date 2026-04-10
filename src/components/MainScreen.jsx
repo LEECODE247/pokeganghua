@@ -52,7 +52,7 @@ export default function MainScreen() {
           <div className="roulette-rate-row">
             <span style={{ color: '#9e9e9e' }}>★☆☆☆</span>
             <span style={{ color: 'var(--text2)' }}>일반</span>
-            <span style={{ color: 'var(--text)', fontWeight: 700 }}>50%</span>
+            <span style={{ color: 'var(--text)', fontWeight: 700 }}>52%</span>
           </div>
           <div className="roulette-rate-row">
             <span style={{ color: '#42a5f5' }}>★★☆☆</span>
@@ -62,12 +62,12 @@ export default function MainScreen() {
           <div className="roulette-rate-row">
             <span style={{ color: '#ffd600' }}>★★★☆</span>
             <span style={{ color: 'var(--text2)' }}>영웅</span>
-            <span style={{ color: '#ffd600', fontWeight: 700 }}>15%</span>
+            <span style={{ color: '#ffd600', fontWeight: 700 }}>16%</span>
           </div>
           <div className="roulette-rate-row">
             <span style={{ color: '#e040fb' }}>★★★★</span>
             <span style={{ color: 'var(--text2)' }}>전설</span>
-            <span style={{ color: '#e040fb', fontWeight: 700 }}>5%</span>
+            <span style={{ color: '#e040fb', fontWeight: 700 }}>2%</span>
           </div>
         </div>
       </div>
@@ -77,36 +77,12 @@ export default function MainScreen() {
         <div className="section-title">팁</div>
         <div style={{ fontSize: '0.8rem', color: 'var(--text2)', lineHeight: 1.8 }}>
           🌍 여행으로 161마리 중 랜덤 출현<br/>
-          ⭐ 전설 포켓몬은 5% 확률 — 만나면 놓치지 마세요!<br/>
+          ⭐ 전설 포켓몬은 2% 확률 — 만나면 놓치지 마세요!<br/>
           ⚗️ 강화 +15부터 성공 시 전투력이 <span style={{ color: '#e040fb', fontWeight: 700 }}>2배</span><br/>
           🏟️ 체육관에서 대규모 코인 획득<br/>
           ✨ 황금 포켓몬은 0.5% 확률 — 판매가 5배!
         </div>
       </div>
-
-      {/* 초기화 버튼 */}
-      {/* <div style={{ textAlign: 'center', marginTop: 16, display: 'flex', gap: 12, justifyContent: 'center' }}>
-        <button
-          className="btn btn-gold btn-sm"
-          onClick={() => {
-            if (confirm('코인을 초기값(10,000)으로 초기화할까요?')) {
-              dispatch({ type: 'RESET_COINS' });
-            }
-          }}
-        >
-          💰 코인 초기화
-        </button>
-        <button
-          className="btn btn-ghost btn-sm"
-          onClick={() => {
-            if (confirm('모든 진행 상황을 초기화할까요? 되돌릴 수 없습니다!')) {
-              dispatch({ type: 'RESET_GAME' });
-            }
-          }}
-        >
-          🔄 게임 초기화
-        </button>
-      </div> */}
     </div>
   );
 }
