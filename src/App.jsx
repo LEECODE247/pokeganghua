@@ -34,6 +34,7 @@ const INITIAL_STATE = {
   totalEnhanced: 0,
   totalBattles: 0,
   totalWins: 0,
+  lastCoinClaim: 0,
 };
 
 function gameReducer(state, action) {
@@ -196,6 +197,12 @@ function gameReducer(state, action) {
 
     case 'RESET_COINS':
       return { ...state, coins: INITIAL_STATE.coins };
+
+    case 'CLAIM_COINS': {
+      const now = Date.now();
+      if (now - state.lastCoinClaim < 3600000) return state;
+      return { ...state, coins: state.coins + 10000, lastCoinClaim: now };
+    }
 
     case 'RESET_GAME':
       return { ...INITIAL_STATE };
