@@ -18,6 +18,10 @@ export default function BattleScreen() {
 
   const myBattlePokemon = inventory.find(p => p.instanceId === battlePokemonId) || null;
 
+  const today = new Date().toDateString();
+  const dailyCount = state.battleResetDate === today ? (state.dailyBattleCount || 0) : 0;
+  const battleLimitReached = dailyCount >= 10;
+
   // 다른 플레이어 목록 불러오기
   const loadPlayers = useCallback(async () => {
     if (!accountId) return;
@@ -52,17 +56,13 @@ export default function BattleScreen() {
       sizeGrade:    pokemon.sizeGrade,
       enhanceLevel: pokemon.enhanceLevel,
       isGolden:     pokemon.isGolden,
-      attack:       pokemon.attack,
-      defense:      pokemon.defense,
-      hp:           pokemon.hp,
-      speed:        pokemon.speed,
       power:        calculatePower(pokemon),
       sellPrice:    calculateSellPrice(pokemon),
     };
   }
 
   function doBattle(opponent) {
-    if (!myBattlePokemon || isBattling) return;
+    if (!myBattlePokemon || isBattling || battleLimitReached) return;
     setIsBattling(true);
     setBattleResult(null);
 
@@ -92,6 +92,20 @@ export default function BattleScreen() {
   return (
     <div>
       <div className="section-title">⚔️ 플레이어 배틀</div>
+
+      {/* 일일 배틀 횟수 */}
+      <div style={{
+        background: battleLimitReached ? 'rgba(183,28,28,0.12)' : 'rgba(99,102,241,0.1)',
+        border: `1px solid ${battleLimitReached ? 'var(--fail)' : 'var(--border)'}`,
+        borderRadius: 8, padding: '6px 12px', marginBottom: 12,
+        fontSize: '0.8rem', color: battleLimitReached ? 'var(--fail)' : 'var(--text2)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <span>⚔️ 오늘 배틀 횟수</span>
+        <span style={{ fontWeight: 700, color: battleLimitReached ? 'var(--fail)' : 'var(--text)' }}>
+          {dailyCount} / 10 {battleLimitReached && '— 내일 초기화됩니다'}
+        </span>
+      </div>
 
       {/* 탭 */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
@@ -196,11 +210,11 @@ export default function BattleScreen() {
                     </div>
                     <button
                       className="btn btn-primary btn-sm"
-                      disabled={!myBattlePokemon || isBattling}
+                      disabled={!myBattlePokemon || isBattling || battleLimitReached}
                       onClick={() => doBattle(player)}
                       style={{ flexShrink: 0 }}
                     >
-                      {isBattling ? '⚔️...' : '도전!'}
+                      {isBattling ? '⚔️...' : battleLimitReached ? '한도 초과' : '도전!'}
                     </button>
                   </div>
                 );

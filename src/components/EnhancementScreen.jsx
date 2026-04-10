@@ -7,11 +7,12 @@ import {
 } from '../utils/gameUtils.js';
 
 export default function EnhancementScreen() {
-  const { state, dispatch } = useGame();
+  const { state, dispatch, saveNow } = useGame();
   const { enhancingPokemonId, enhanceResult, enhanceFailStack, inventory } = state;
 
   const [cardAnim, setCardAnim] = useState('');
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [useShield, setUseShield] = useState(false);
 
   const pokemon = inventory.find(p => p.instanceId === enhancingPokemonId);
 
@@ -21,12 +22,18 @@ export default function EnhancementScreen() {
     const animMap = {
       success: 'anim-success',
       fail: 'anim-fail',
+      shielded: 'anim-fail',
       decreased: 'anim-fail',
       destroyed: 'anim-destroyed',
     };
 
     setCardAnim(animMap[enhanceResult] || '');
     setIsEnhancing(false);
+
+    // 파괴 시 Supabase에 즉시 저장 (beforeunload async 버그 방지)
+    if (enhanceResult === 'destroyed') {
+      saveNow();
+    }
 
     const t = setTimeout(() => {
       setCardAnim('');
@@ -45,7 +52,7 @@ export default function EnhancementScreen() {
     dispatch({ type: 'CLEAR_ENHANCE_RESULT' });
 
     setTimeout(() => {
-      dispatch({ type: 'ATTEMPT_ENHANCE' });
+      dispatch({ type: 'ATTEMPT_ENHANCE', useShield });
     }, 300);
   }
 
@@ -210,8 +217,9 @@ export default function EnhancementScreen() {
             {/* 강화 결과 플래시 */}
             {enhanceResult && (
               <div className={`enhance-result-flash ${enhanceResult}`}>
-                {enhanceResult === 'success' && `🎉 성공! +${level} 달성!`}
-                {enhanceResult === 'fail' && `💨 실패... (+${level} 유지)`}
+                {enhanceResult === 'success'   && `🎉 성공! +${level} 달성!`}
+                {enhanceResult === 'fail'      && `💨 실패... (+${level} 유지)`}
+                {enhanceResult === 'shielded'  && `🛡️ 파편 1000개로 파괴를 막았습니다!`}
                 {enhanceResult === 'decreased' && `📉 실패! +${level}로 하락`}
                 {enhanceResult === 'destroyed' && `💥 파괴됨! 포켓몬을 잃었습니다!`}
               </div>
@@ -226,11 +234,11 @@ export default function EnhancementScreen() {
               {isEnhancing ? '⚡ 강화 중...' : `⚗️ 강화 (+${level} → +${level + 1})`}
             </button>
 
-            {/* 파괴 위험 경고 */}
+            {/* 파괴 위험 경고 + 파편 방어 */}
             {failEffect === 'destroy' && (
               <div style={{
                 background: 'rgba(183,28,28,0.15)', border: '1px solid var(--fail)',
-                borderRadius: 8, padding: '8px 14px', fontSize: '0.8rem',
+                borderRadius: 8, padding: '10px 14px', fontSize: '0.8rem',
                 color: 'var(--fail)', textAlign: 'center',
               }}>
                 ⚠️ 위험 구간! 실패하면 이 포켓몬이 영구히 파괴됩니다!
@@ -238,6 +246,27 @@ export default function EnhancementScreen() {
                 <span style={{ color: 'var(--text2)' }}>
                   파괴 보상: 💎 {level * 15} 파편
                 </span>
+                <div style={{ marginTop: 8 }}>
+                  <button
+                    onClick={() => setUseShield(v => !v)}
+                    style={{
+                      background: useShield ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.06)',
+                      border: `1px solid ${useShield ? 'var(--primary)' : 'rgba(255,255,255,0.2)'}`,
+                      borderRadius: 8, padding: '5px 14px', cursor: 'pointer',
+                      color: useShield ? 'var(--primary)' : 'var(--text2)',
+                      fontWeight: 700, fontSize: '0.8rem',
+                      opacity: state.fragments >= 1000 ? 1 : 0.4,
+                    }}
+                    disabled={state.fragments < 1000}
+                    title={state.fragments < 1000 ? '파편이 부족합니다' : ''}
+                  >
+                    🛡️ 파편 1000개로 파괴 방지 {useShield ? '✅' : '⬜'}
+                  </button>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text2)', marginTop: 3 }}>
+                    보유 파편: 💎 {state.fragments.toLocaleString()}
+                    {state.fragments < 1000 && <span style={{ color: 'var(--fail)' }}> (부족)</span>}
+                  </div>
+                </div>
               </div>
             )}
           </>

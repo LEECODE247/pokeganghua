@@ -35,6 +35,8 @@ const INITIAL_STATE = {
   totalBattles: 0,
   totalWins: 0,
   lastCoinClaim: 0,
+  dailyBattleCount: 0,
+  battleResetDate: '',
 };
 
 function gameReducer(state, action) {
@@ -59,7 +61,7 @@ function gameReducer(state, action) {
       if (!ballCfg || state.coins < ballCfg.cost || !state.wildPokemon) return state;
 
       const baseRate  = ballCfg.rates[state.wildPokemon.rarity] || 0;
-      const catchRate = Math.min(1, baseRate + state.captureFailStreak * 0.05);
+      const catchRate = Math.min(1, baseRate + state.captureFailStreak * 0.01);
       const roll      = Math.random();
       const result    = roll < catchRate ? 'success' : roll < catchRate + 0.18 ? 'near-miss' : 'fail';
       const captured  = result === 'success';
@@ -104,9 +106,14 @@ function gameReducer(state, action) {
         newFailStack++;
         const failEffect = getEnhanceFailEffect(pokemon.enhanceLevel);
         if (failEffect === 'destroy') {
-          result = 'destroyed';
-          newInventory = newInventory.filter(p => p.instanceId !== pokemon.instanceId);
-          newFragments += pokemon.enhanceLevel * 15;
+          if (action.useShield && state.fragments >= 1000) {
+            result = 'shielded';
+            newFragments -= 1000;
+          } else {
+            result = 'destroyed';
+            newInventory = newInventory.filter(p => p.instanceId !== pokemon.instanceId);
+            newFragments += pokemon.enhanceLevel * 15;
+          }
         } else if (failEffect === 'minus1') {
           result = 'decreased';
           newInventory = newInventory.map(p =>
@@ -137,11 +144,29 @@ function gameReducer(state, action) {
     case 'REGISTER_BATTLE_POKEMON':
       return { ...state, battlePokemonId: action.pokemonId };
 
-    case 'BATTLE_WIN':
-      return { ...state, coins: state.coins + action.coins, totalBattles: state.totalBattles + 1, totalWins: state.totalWins + 1 };
+    case 'BATTLE_WIN': {
+      const today = new Date().toDateString();
+      const prevCount = state.battleResetDate === today ? state.dailyBattleCount : 0;
+      return {
+        ...state,
+        coins: state.coins + action.coins,
+        totalBattles: state.totalBattles + 1,
+        totalWins: state.totalWins + 1,
+        dailyBattleCount: prevCount + 1,
+        battleResetDate: today,
+      };
+    }
 
-    case 'BATTLE_LOSE':
-      return { ...state, totalBattles: state.totalBattles + 1 };
+    case 'BATTLE_LOSE': {
+      const today = new Date().toDateString();
+      const prevCount = state.battleResetDate === today ? state.dailyBattleCount : 0;
+      return {
+        ...state,
+        totalBattles: state.totalBattles + 1,
+        dailyBattleCount: prevCount + 1,
+        battleResetDate: today,
+      };
+    }
 
     case 'SELL_POKEMON': {
       const pokemon = state.inventory.find(p => p.instanceId === action.pokemonId);
@@ -305,6 +330,11 @@ function GameApp({ accountId, nickname, initialState, onLogout }) {
     return () => window.removeEventListener('beforeunload', flush);
   }, [state, accountId]);
 
+  function saveNow(latestState) {
+    clearTimeout(saveTimer.current);
+    saveGameState(accountId, latestState ?? state);
+  }
+
   const screens = {
     main:        <MainScreen />,
     capture:     <CaptureScreen />,
@@ -315,7 +345,7 @@ function GameApp({ accountId, nickname, initialState, onLogout }) {
   };
 
   return (
-    <GameContext.Provider value={{ state, dispatch, nickname, accountId, onLogout }}>
+    <GameContext.Provider value={{ state, dispatch, nickname, accountId, onLogout, saveNow }}>
       <div className="app">
         <HUD />
         <div className="screen-container">

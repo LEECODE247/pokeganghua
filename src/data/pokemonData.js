@@ -157,48 +157,59 @@ export const GYM_CONFIG = {
 };
 
 export const BALL_CONFIG = {
+  // 몬스터볼: 초보용, ★1만 어느 정도 믿을 수 있음
   monster: {
     name: '몬스터볼',
     icon: '⚫',
     cost: 100,
     color: '#ef5350',
-    rates: { 1: 1.00, 2: 0.50, 3: 0.10, 4: 0.02 },
-    description: '기본 볼 — ★4 포획률 2%',
+    rates: { 1: 0.70, 2: 0.20, 3: 0.05, 4: 0.003 },
+    description: '기본 볼 — ★1: 70% · ★2: 20% · ★3: 5% · ★4: 0.3%',
   },
+  // 슈퍼볼: ★2 전용, ★3 도전 가능
   super: {
     name: '슈퍼볼',
     icon: '🔵',
     cost: 3000,
     color: '#42a5f5',
-    rates: { 1: 1.00, 2: 0.70, 3: 0.20, 4: 0.07 },
-    description: '고급 볼 — ★4 포획률 7%',
+    rates: { 1: 1.00, 2: 0.60, 3: 0.12, 4: 0.015 },
+    description: '★1 확정 — ★2: 60% · ★3: 12% · ★4: 1.5%',
   },
+  // 하이퍼볼: ★3 전용, ★4 소폭 도전
   hyper: {
     name: '하이퍼볼',
     icon: '🟡',
     cost: 20000,
     color: '#ffd600',
-    rates: { 1: 1.00, 2: 1.00, 3: 0.50, 4: 0.20 },
-    description: '★★ 확정, ★4 포획률 20%',
+    rates: { 1: 1.00, 2: 1.00, 3: 0.40, 4: 0.05 },
+    description: '★1·2 확정 — ★3: 40% · ★4: 5%',
   },
+  // 마스터볼: ★4 도전, 3성 확정
   master: {
     name: '마스터볼',
     icon: '🟣',
     cost: 100000,
     color: '#ce93d8',
-    rates: { 1: 1.00, 2: 1.00, 3: 1.00, 4: 0.50 },
-    description: '★★★ 확정, ★4 포획률 50%',
+    rates: { 1: 1.00, 2: 1.00, 3: 1.00, 4: 0.15 },
+    description: '★1·2·3 확정 — ★4: 15%',
   },
 };
 
 export const ENHANCE_CONFIG = [
-  { range: [0,  4],  rate: 1.00, fail: 'none',    cost: 500,    protectCost: 0    },
-  { range: [5,  9],  rate: 0.70, fail: 'nothing',  cost: 2000,   protectCost: 0    },
-  { range: [10, 14], rate: 0.50, fail: 'minus1',   cost: 8000,   protectCost: 0    },
-  // +15부터 성공 시 전투력 2배, 실패 시 파괴 (특수재화로 보호 가능)
-  { range: [15, 15], rate: 0.30, fail: 'destroy',  cost: 50000,  protectCost: 1000 },
-  { range: [16, 16], rate: 0.27, fail: 'destroy',  cost: 60000,  protectCost: 2000 },
-  { range: [17, 17], rate: 0.24, fail: 'destroy',  cost: 80000,  protectCost: 3000 },
-  { range: [18, 18], rate: 0.20, fail: 'destroy',  cost: 100000, protectCost: 4000 },
-  { range: [19, 19], rate: 0.10, fail: 'destroy',  cost: 150000, protectCost: 5000 },
+  // +0~+4: 무조건 성공
+  { range: [0,  4],  rate: 1.00, fail: 'none',    cost: 500    },
+  // +5~+7: 높은 확률, 실패해도 변화 없음
+  { range: [5,  7],  rate: 0.90, fail: 'nothing', cost: 2000   },
+  // +8~+10: 무난한 구간, 실패해도 변화 없음
+  { range: [8,  10], rate: 0.75, fail: 'nothing', cost: 6000   },
+  // +11~+12: 실패 시 레벨 -1
+  { range: [11, 12], rate: 0.55, fail: 'minus1',  cost: 20000  },
+  // +13~+14: 더 어려움, 실패 시 레벨 -1
+  { range: [13, 14], rate: 0.40, fail: 'minus1',  cost: 40000  },
+  // +15부터 성공 시 전투력 2배, 실패 시 파괴 (💎1000개로 보호 가능)
+  { range: [15, 15], rate: 0.30, fail: 'destroy', cost: 70000  },
+  { range: [16, 16], rate: 0.25, fail: 'destroy', cost: 90000  },
+  { range: [17, 17], rate: 0.20, fail: 'destroy', cost: 120000 },
+  { range: [18, 18], rate: 0.15, fail: 'destroy', cost: 160000 },
+  { range: [19, 19], rate: 0.10, fail: 'destroy', cost: 200000 },
 ];

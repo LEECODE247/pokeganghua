@@ -64,21 +64,6 @@ export default function PokemonModal({ pokemon, onClose }) {
           )}
         </div>
 
-        {/* 스탯 */}
-        <div className="modal-stats">
-          {[
-            { label: '공격', val: pokemon.attack },
-            { label: '방어', val: pokemon.defense },
-            { label: '체력', val: pokemon.hp },
-            { label: '속도', val: pokemon.speed },
-          ].map(s => (
-            <div key={s.label} className="modal-stat">
-              <div className="modal-stat-val">{s.val}</div>
-              <div className="modal-stat-label">{s.label}</div>
-            </div>
-          ))}
-        </div>
-
         {/* 전투력 */}
         <div style={{ textAlign: 'center' }}>
           <div className="modal-power">⚡ {power.toLocaleString()}</div>

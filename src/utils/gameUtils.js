@@ -11,14 +11,14 @@ export function getPokemonName(id) {
 }
 
 // 글로벌 여행 — 전체 풀에서 랜덤 추첨
-// 출현 확률: ★1=50%, ★2=30%, ★3=15%, ★4=5%
+// 출현 확률: ★1=52%, ★2=30%, ★3=16%, ★4=2%
 export function generateWildPokemon() {
   const roll = Math.random();
   let rarity;
-  if (roll < 0.05)       rarity = 4;  // 5% 전설
-  else if (roll < 0.20)  rarity = 3;  // 15% 영웅
-  else if (roll < 0.50)  rarity = 2;  // 30% 희귀
-  else                   rarity = 1;  // 50% 일반
+  if (roll < 0.02)       rarity = 4;  // 2% 전설
+  else if (roll < 0.18)  rarity = 3;  // 16% 영웅
+  else if (roll < 0.48)  rarity = 2;  // 30% 희귀
+  else                   rarity = 1;  // 52% 일반
 
   const pool = ALL_POKEMON_BY_RARITY[rarity];
   const pokemonId = pool[Math.floor(Math.random() * pool.length)];
@@ -26,15 +26,6 @@ export function generateWildPokemon() {
 }
 
 export function createPokemonInstance(pokemonId, rarity) {
-  const statRanges = {
-    1: [20,  70],
-    2: [55,  115],
-    3: [95,  165],
-    4: [160, 240],
-  };
-  const [min, max] = statRanges[rarity] || [20, 70];
-  const rand = () => Math.floor(Math.random() * (max - min) + min);
-
   const sizeGrades = ['S', 'A', 'B', 'C'];
   const sizeGrade = sizeGrades[Math.floor(Math.random() * 4)];
   const size = Math.floor(Math.random() * 100) + 1;
@@ -50,28 +41,24 @@ export function createPokemonInstance(pokemonId, rarity) {
     sizeGrade,
     enhanceLevel: 0,
     isGolden,
-    attack: rand(),
-    defense: rand(),
-    hp: rand(),
-    speed: rand(),
     capturedAt: Date.now(),
   };
 }
 
 export function calculatePower(pokemon) {
-  const rarityMult = { 1: 1, 2: 2.2, 3: 5, 4: 15 }[pokemon.rarity] || 1;
-  const sizeMult = { S: 1.2, A: 1.1, B: 1.0, C: 0.9 }[pokemon.sizeGrade];
+  // 희귀도별 기준 전투력 (기존 스탯 합산 평균과 동일한 스케일 유지)
+  const rarityBase = { 1: 200, 2: 750, 3: 2600, 4: 12000 }[pokemon.rarity] || 200;
+  const sizeMult = { S: 1.2, A: 1.1, B: 1.0, C: 0.9 }[pokemon.sizeGrade] || 1.0;
   const lv = pokemon.enhanceLevel;
   // +14까지: 선형 증가 / +15부터: 성공마다 전투력 2배
   const enhanceMult = lv <= 14
     ? 1 + lv * 0.2
     : (1 + 14 * 0.2) * Math.pow(2, lv - 14); // 3.8 × 2^(lv-14)
-  const statTotal = pokemon.attack + pokemon.defense + pokemon.hp + pokemon.speed;
-  return Math.floor(statTotal * rarityMult * sizeMult * enhanceMult);
+  return Math.floor(rarityBase * sizeMult * enhanceMult);
 }
 
 export function calculateSellPrice(pokemon) {
-  const basePrice = { 1: 500, 2: 2000, 3: 10000, 4: 80000 }[pokemon.rarity] || 500;
+  const basePrice = { 1: 200, 2: 3000, 3: 25000, 4: 100000 }[pokemon.rarity] || 200;
   const sizeMult = { S: 2.0, A: 1.5, B: 1.0, C: 0.7 }[pokemon.sizeGrade];
   const lv = pokemon.enhanceLevel;
   const enhanceMult = lv <= 14

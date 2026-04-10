@@ -36,7 +36,7 @@ export default function HelpModal({ onClose }) {
         <Section title="🌍 여행 (포켓몬 포획)">
           <Row><b>여행하기</b> 버튼을 누르면 야생 포켓몬이 나타납니다.</Row>
           <Row>볼을 선택하면 코인이 즉시 차감되고 포획을 시도합니다.</Row>
-          <Row>포획 실패가 이어질수록 다음 포획률이 <b>5%씩</b> 누적 상승합니다.</Row>
+          <Row>포획 실패가 이어질수록 다음 포획률이 <b>1%씩</b> 누적 상승합니다.</Row>
           <Row>포획 성공 시 포켓몬이 가방에 추가됩니다.</Row>
           <RarityTable />
         </Section>
@@ -47,7 +47,7 @@ export default function HelpModal({ onClose }) {
 
         <Section title="✨ 특수 포켓몬">
           <Row><b style={{ color: '#FFD700' }}>황금 포켓몬</b> — 0.5% 확률 출현, 판매가 <b>5배!</b></Row>
-          <Row><b style={{ color: '#e040fb' }}>전설 포켓몬 ★★★★</b> — 5% 확률, 뮤츠·뮤·전설 조류 등 최상위 포켓몬</Row>
+          <Row><b style={{ color: '#e040fb' }}>전설 포켓몬 ★★★★</b> — 출현 2% · 포획률 최대 15%, 뮤츠·뮤·전설 조류 등 최상위 포켓몬</Row>
           <Row>크기 등급(S·A·B·C)도 전투력과 판매가에 영향을 줍니다. <b>S가 가장 유리</b>합니다.</Row>
         </Section>
 
@@ -56,6 +56,10 @@ export default function HelpModal({ onClose }) {
           <EnhanceTable />
           <Row style={{ marginTop: 4 }}>강화 실패가 쌓일수록 다음 시도 성공률이 <b>5%씩</b> 보너스됩니다.</Row>
           <Row><b style={{ color: '#e040fb' }}>+15 이상</b>부터 강화 성공 시 전투력이 <b>2배씩</b> 폭발적으로 상승!</Row>
+          <Row>
+            🛡️ <b>파괴 방지</b> — +15 이상 강화 시 <b style={{ color: '#FFD700' }}>💎 파편 1000개</b>를 소모해 파괴를 막을 수 있습니다.<br />
+            방지 적용 시 강화 실패해도 포켓몬은 현재 레벨을 유지합니다.
+          </Row>
         </Section>
 
         <Section title="💎 파편">
@@ -68,7 +72,8 @@ export default function HelpModal({ onClose }) {
           <Row>보유한 포켓몬을 전체 확인할 수 있습니다.</Row>
           <Row>카드를 클릭하면 포켓몬 상세 정보와 <b>판매·강화 이동</b> 버튼이 표시됩니다.</Row>
           <Row>일괄 판매 기능으로 여러 마리를 한번에 판매할 수 있습니다.</Row>
-          <Row>판매가 = 희귀도 × 크기 등급 × 강화 레벨 배율 (황금이면 ×5)</Row>
+          <Row>판매 기준가: ★1 🪙200 · ★2 🪙3,000 · ★3 🪙25,000 · ★4 🪙100,000</Row>
+          <Row>크기 배율: S×2 · A×1.5 · B×1 · C×0.7 · 강화 레벨 배율 · 황금 ×5</Row>
         </Section>
 
         <Section title="🏟️ 체육관">
@@ -90,6 +95,7 @@ export default function HelpModal({ onClose }) {
           <Row>💀 <b>패배</b> — 코인 손실 없음. 부담 없이 도전하세요!</Row>
           <Row>승률 공식: 내 전투력 ÷ (내 전투력 + 상대 전투력) × 100 (최소 10% ~ 최대 90%)</Row>
           <Row>배틀 목록은 <b>30초마다</b> 자동으로 갱신됩니다.</Row>
+          <Row>⚠️ 하루 <b>최대 10번</b>까지만 배틀할 수 있습니다. 매일 자정에 초기화됩니다.</Row>
         </Section>
 
         <button
@@ -125,10 +131,10 @@ function Row({ children, style }) {
 
 function RarityTable() {
   const rows = [
-    { stars: '★☆☆☆', label: '일반',  rate: '50%', color: '#9e9e9e' },
+    { stars: '★☆☆☆', label: '일반',  rate: '52%', color: '#9e9e9e' },
     { stars: '★★☆☆', label: '희귀',  rate: '30%', color: '#42a5f5' },
-    { stars: '★★★☆', label: '영웅',  rate: '15%', color: '#ffd600' },
-    { stars: '★★★★', label: '전설',  rate: '5%',  color: '#e040fb' },
+    { stars: '★★★☆', label: '영웅',  rate: '16%', color: '#ffd600' },
+    { stars: '★★★★', label: '전설',  rate: '2%',  color: '#e040fb' },
   ];
   return (
     <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
@@ -148,10 +154,10 @@ function RarityTable() {
 
 function BallTable() {
   const balls = [
-    { name: '몬스터볼', icon: '⚽', cost: '🪙100',     desc: '★1: 50% · ★2: 20% · ★3: 5% · ★4: 2%' },
-    { name: '슈퍼볼',   icon: '🔵', cost: '🪙3,000',   desc: '★1: 80% · ★2: 50% · ★3: 20% · ★4: 7%' },
-    { name: '하이퍼볼', icon: '🟡', cost: '🪙20,000',  desc: '★1·2 확정 · ★3: 80% · ★4: 20%' },
-    { name: '마스터볼', icon: '🟣', cost: '🪙100,000', desc: '★1·2·3 확정 · ★4: 50%' },
+    { name: '몬스터볼', icon: '⚽', cost: '🪙100',     desc: '★1: 70% · ★2: 20% · ★3: 5% · ★4: 0.3%' },
+    { name: '슈퍼볼',   icon: '🔵', cost: '🪙3,000',   desc: '★1 확정 · ★2: 60% · ★3: 12% · ★4: 1.5%' },
+    { name: '하이퍼볼', icon: '🟡', cost: '🪙20,000',  desc: '★1·2 확정 · ★3: 40% · ★4: 5%' },
+    { name: '마스터볼', icon: '🟣', cost: '🪙100,000', desc: '★1·2·3 확정 · ★4: 15%' },
   ];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -172,10 +178,12 @@ function BallTable() {
 
 function EnhanceTable() {
   const rows = [
-    { range: '+0 ~ +4',   rate: '100%', fail: '없음',       cost: '🪙300~1,500' },
-    { range: '+5 ~ +9',   rate: '70%',  fail: '변화 없음',  cost: '🪙5,000~25,000' },
-    { range: '+10 ~ +14', rate: '50%',  fail: '레벨 -1',    cost: '🪙50,000~250,000' },
-    { range: '+15 ~ +19', rate: '10~30%', fail: '포켓몬 파괴', cost: '🪙500,000+' },
+    { range: '+0 ~ +4',   rate: '100%',  fail: '없음',          cost: '🪙500' },
+    { range: '+5 ~ +7',   rate: '90%',   fail: '변화 없음',     cost: '🪙2,000' },
+    { range: '+8 ~ +10',  rate: '75%',   fail: '변화 없음',     cost: '🪙6,000' },
+    { range: '+11 ~ +12', rate: '55%',   fail: '레벨 -1',       cost: '🪙20,000' },
+    { range: '+13 ~ +14', rate: '40%',   fail: '레벨 -1',       cost: '🪙40,000' },
+    { range: '+15 ~ +19', rate: '10~30%', fail: '포켓몬 파괴 (💎1000 방지)', cost: '🪙70,000+' },
   ];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3, margin: '4px 0' }}>
@@ -187,7 +195,7 @@ function EnhanceTable() {
         }}>
           <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text)' }}>{r.range}</span>
           <span style={{ fontSize: '0.75rem', color: 'var(--success)' }}>성공 {r.rate}</span>
-          <span style={{ fontSize: '0.72rem', color: r.fail === '포켓몬 파괴' ? 'var(--fail)' : 'var(--text2)' }}>실패: {r.fail}</span>
+          <span style={{ fontSize: '0.72rem', color: r.fail.includes('파괴') ? 'var(--fail)' : 'var(--text2)' }}>실패: {r.fail}</span>
         </div>
       ))}
     </div>
