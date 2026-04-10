@@ -191,7 +191,9 @@ export default function CaptureScreen() {
         {(phase === PHASE.THROWING || phase === PHASE.SHAKING) && thrownBall && (
           <div className="pokeball-throw-wrap">
             <span className={`pokeball-anim ${ballShakeClass}`}>
-              {BALL_CONFIG[thrownBall]?.icon || '⚫'}
+              {BALL_CONFIG[thrownBall]?.img
+                ? <img src={BALL_CONFIG[thrownBall].img} alt="" style={{ width: 48, height: 48, imageRendering: 'pixelated' }} />
+                : BALL_CONFIG[thrownBall]?.icon || '⚫'}
             </span>
             {phase === PHASE.SHAKING && (
               <div style={{ position: 'absolute', fontSize: '0.8rem', color: 'var(--text2)', bottom: -20 }}>
@@ -219,7 +221,9 @@ export default function CaptureScreen() {
                   onClick={() => throwBall(type)}
                   style={{ borderColor: canAfford ? cfg.color : 'transparent' }}
                 >
-                  <span style={{ fontSize: '1.4rem' }}>{cfg.icon}</span>
+                  {cfg.img
+                    ? <img src={cfg.img} alt={cfg.name} style={{ width: 32, height: 32, imageRendering: 'pixelated' }} />
+                    : <span style={{ fontSize: '1.4rem' }}>{cfg.icon}</span>}
                   <span className="ball-btn-name" style={{ color: cfg.color }}>{cfg.name}</span>
                   <span className="ball-btn-count" style={{ color: 'var(--gold)' }}>
                     🪙{formatCoins(cfg.cost)}
@@ -244,7 +248,9 @@ export default function CaptureScreen() {
         <div className="capture-countdown-overlay">
           <div className="countdown-ball-wrap">
             <div className="countdown-pokeball">
-              {thrownBall ? BALL_CONFIG[thrownBall]?.icon : '⚫'}
+              {thrownBall && BALL_CONFIG[thrownBall]?.img
+                ? <img src={BALL_CONFIG[thrownBall].img} alt="" style={{ width: 56, height: 56, imageRendering: 'pixelated' }} />
+                : thrownBall ? BALL_CONFIG[thrownBall]?.icon : '⚫'}
             </div>
             {countdown === 'gotcha' ? (
               <div className="countdown-gotcha">GOTCHA! 🎉</div>
