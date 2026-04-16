@@ -13,7 +13,7 @@ export default function HelpModal({ onClose }) {
     >
       <div
         style={{
-          background: 'var(--surface)', borderRadius: 16,
+          background: 'var(--surface, var(--card))', borderRadius: 16,
           padding: '20px', maxWidth: 420, width: '100%',
           border: '1px solid var(--border)', marginTop: 8,
         }}
@@ -47,8 +47,21 @@ export default function HelpModal({ onClose }) {
 
         <Section title="✨ 특수 포켓몬">
           <Row><b style={{ color: '#FFD700' }}>황금 포켓몬</b> — 0.5% 확률 출현, 판매가 <b>5배!</b></Row>
-          <Row><b style={{ color: '#e040fb' }}>전설 포켓몬 ★★★★</b> — 출현 2% · 포획률 최대 15%, 뮤츠·뮤·전설 조류 등 최상위 포켓몬</Row>
+          <Row><b style={{ color: '#e040fb' }}>전설 포켓몬 ★★★★</b> — 출현 2%, 뮤츠·루기아·칠색조·디아루가 등</Row>
+          <Row><b style={{ color: '#FF6B00' }}>신화 포켓몬 ★★★★★</b> — 출현 0.5%,{' '}
+            <b>마스터볼로만 포획 가능 (10%)</b>. 다른 볼은 포획 불가!</Row>
           <Row>크기 등급(S·A·B·C)도 전투력과 판매가에 영향을 줍니다. <b>S가 가장 유리</b>합니다.</Row>
+        </Section>
+
+        <Section title="🌟 아르세우스 (★★★★★)">
+          <Row>전설을 초월한 <b style={{ color: '#FF6B00' }}>신화 포켓몬</b>입니다.</Row>
+          <Row>출현 확률 <b>0.5%</b> — 조우해도 <b>마스터볼 외 포획 불가</b>합니다.</Row>
+          <Row>마스터볼로 도전 시 <b>10%</b> 확률로 포획 성공.</Row>
+          <Row>기준 전투력 <b>40,000</b> · 판매 기준가 <b>🪙500,000</b>으로 최강급 스펙!</Row>
+        </Section>
+
+        <Section title="📖 도감 완성 보상">
+          <RewardTable />
         </Section>
 
         <Section title="⚗️ 강화 시스템">
@@ -65,14 +78,14 @@ export default function HelpModal({ onClose }) {
         <Section title="💎 파편">
           <Row>강화 실패 시 <b>💎 파편</b>을 소량 획득합니다.</Row>
           <Row>실패(변화 없음): +3 / 레벨 감소: +8 / 포켓몬 파괴: 레벨×15</Row>
-          <Row>현재 파편은 상단 HUD에 표시됩니다. (추후 활용 예정)</Row>
+          <Row>도감 1세대 완성 보상으로 <b>💎 파편 10,000개</b>를 획득할 수 있습니다.</Row>
         </Section>
 
         <Section title="🎒 가방 (인벤토리)">
           <Row>보유한 포켓몬을 전체 확인할 수 있습니다.</Row>
           <Row>카드를 클릭하면 포켓몬 상세 정보와 <b>판매·강화 이동</b> 버튼이 표시됩니다.</Row>
           <Row>일괄 판매 기능으로 여러 마리를 한번에 판매할 수 있습니다.</Row>
-          <Row>판매 기준가: ★1 🪙200 · ★2 🪙3,000 · ★3 🪙25,000 · ★4 🪙100,000</Row>
+          <Row>판매 기준가: ★1 🪙200 · ★2 🪙3,000 · ★3 🪙25,000 · ★4 🪙100,000 · ★5 🪙500,000</Row>
           <Row>크기 배율: S×2 · A×1.5 · B×1 · C×0.7 · 강화 레벨 배율 · 황금 ×5</Row>
         </Section>
 
@@ -81,6 +94,11 @@ export default function HelpModal({ onClose }) {
           <Row>체육관마다 <b>최소 전투력 요건</b>이 있습니다.</Row>
           <Row>전투력이 높을수록 승리 확률이 올라가며, 패배해도 소액 위로금을 받습니다.</Row>
           <Row>도전 후 해당 포켓몬은 <b>1시간 쿨다운</b>이 적용됩니다.</Row>
+          <Row>
+            <b style={{ color: '#FF6B00' }}>✨ 신화 체육관</b> — 전투력 350만 기준 <b>5%</b>에서 시작,
+            50만 오를 때마다 <b>+5%</b>씩 상승합니다.
+            아르세우스 S+20강(약 1,170만) 기준 최대 <b>85%</b>까지 도달 가능.
+          </Row>
           <GymTable />
         </Section>
 
@@ -131,10 +149,11 @@ function Row({ children, style }) {
 
 function RarityTable() {
   const rows = [
-    { stars: '★☆☆☆', label: '일반',  rate: '52%', color: '#9e9e9e' },
-    { stars: '★★☆☆', label: '희귀',  rate: '30%', color: '#42a5f5' },
-    { stars: '★★★☆', label: '영웅',  rate: '16%', color: '#ffd600' },
-    { stars: '★★★★', label: '전설',  rate: '2%',  color: '#e040fb' },
+    { stars: '★☆☆☆', label: '일반',   rate: '52%',   color: '#9e9e9e' },
+    { stars: '★★☆☆', label: '희귀',   rate: '29.5%', color: '#42a5f5' },
+    { stars: '★★★☆', label: '영웅',   rate: '16%',   color: '#ffd600' },
+    { stars: '★★★★', label: '전설',   rate: '2%',    color: '#e040fb' },
+    { stars: '★★★★★', label: '신화',  rate: '0.5%',  color: '#FF6B00' },
   ];
   return (
     <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
@@ -143,7 +162,7 @@ function RarityTable() {
           background: 'var(--bg)', borderRadius: 6, padding: '4px 8px',
           display: 'flex', alignItems: 'center', gap: 4,
         }}>
-          <span style={{ color: r.color, fontSize: '0.75rem' }}>{r.stars}</span>
+          <span style={{ color: r.color, fontSize: '0.7rem' }}>{r.stars}</span>
           <span style={{ fontSize: '0.75rem', color: 'var(--text2)' }}>{r.label}</span>
           <span style={{ fontSize: '0.75rem', fontWeight: 700, color: r.color }}>{r.rate}</span>
         </div>
@@ -154,10 +173,10 @@ function RarityTable() {
 
 function BallTable() {
   const balls = [
-    { name: '몬스터볼', icon: '⚽', cost: '🪙100',     desc: '★1: 70% · ★2: 20% · ★3: 5% · ★4: 0.3%' },
-    { name: '슈퍼볼',   icon: '🔵', cost: '🪙3,000',   desc: '★1 확정 · ★2: 60% · ★3: 12% · ★4: 1.5%' },
-    { name: '하이퍼볼', icon: '🟡', cost: '🪙20,000',  desc: '★1·2 확정 · ★3: 40% · ★4: 5%' },
-    { name: '마스터볼', icon: '🟣', cost: '🪙100,000', desc: '★1·2·3 확정 · ★4: 15%' },
+    { name: '몬스터볼', icon: '⚽', cost: '🪙100',     desc: '★1: 70% · ★2: 20% · ★3: 5% · ★4: 0.3% · ★5: 불가' },
+    { name: '슈퍼볼',   icon: '🔵', cost: '🪙3,000',   desc: '★1 확정 · ★2: 60% · ★3: 12% · ★4: 1.5% · ★5: 불가' },
+    { name: '하이퍼볼', icon: '🟡', cost: '🪙20,000',  desc: '★1·2 확정 · ★3: 40% · ★4: 5% · ★5: 불가' },
+    { name: '마스터볼', icon: '🟣', cost: '🪙100,000', desc: '★1·2·3 확정 · ★4: 15% · ★5 아르세우스: 10%' },
   ];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -176,14 +195,53 @@ function BallTable() {
   );
 }
 
+function RewardTable() {
+  const rewards = [
+    {
+      gen: '1세대 완성',
+      icon: '🔴',
+      condition: '1세대 포켓몬 151마리 전부 포획',
+      reward: '💎 파편 10,000개',
+      color: '#ffd600',
+    },
+    {
+      gen: '2세대 완성',
+      icon: '🟡',
+      condition: '2세대 포켓몬 100마리 전부 포획',
+      reward: '랜덤 +15강 S급 ★4 포켓몬 1마리',
+      color: '#e040fb',
+    },
+  ];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      {rewards.map(r => (
+        <div key={r.gen} style={{
+          background: 'var(--bg)', borderRadius: 6, padding: '7px 10px',
+          borderLeft: `2px solid ${r.color}`,
+        }}>
+          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: r.color }}>
+            {r.icon} {r.gen}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text2)', marginTop: 1 }}>
+            조건: {r.condition}
+          </div>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text)', fontWeight: 700, marginTop: 2 }}>
+            보상: {r.reward}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function EnhanceTable() {
   const rows = [
-    { range: '+0 ~ +4',   rate: '100%',  fail: '없음',          cost: '🪙500' },
-    { range: '+5 ~ +7',   rate: '90%',   fail: '변화 없음',     cost: '🪙2,000' },
-    { range: '+8 ~ +10',  rate: '75%',   fail: '변화 없음',     cost: '🪙6,000' },
-    { range: '+11 ~ +12', rate: '55%',   fail: '레벨 -1',       cost: '🪙20,000' },
-    { range: '+13 ~ +14', rate: '40%',   fail: '레벨 -1',       cost: '🪙40,000' },
-    { range: '+15 ~ +19', rate: '10~30%', fail: '포켓몬 파괴 (💎1000 방지)', cost: '🪙70,000+' },
+    { range: '+0 ~ +4',   rate: '100%',   fail: '없음',              cost: '🪙500' },
+    { range: '+5 ~ +7',   rate: '90%',    fail: '변화 없음',         cost: '🪙2,000' },
+    { range: '+8 ~ +10',  rate: '75%',    fail: '변화 없음',         cost: '🪙6,000' },
+    { range: '+11 ~ +12', rate: '55%',    fail: '레벨 -1',           cost: '🪙20,000' },
+    { range: '+13 ~ +14', rate: '40%',    fail: '레벨 -1',           cost: '🪙40,000' },
+    { range: '+15 ~ +19', rate: '15~35%', fail: '포켓몬 파괴 (💎1000 방지)', cost: '🪙70,000+' },
   ];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3, margin: '4px 0' }}>
@@ -204,10 +262,14 @@ function EnhanceTable() {
 
 function GymTable() {
   const gyms = [
-    { name: '숲',   icon: '🌲', power: '500',    reward: '🪙1,000' },
-    { name: '강',   icon: '🌊', power: '2,000',  reward: '🪙4,000' },
-    { name: '동굴', icon: '⛰️', power: '8,000',  reward: '🪙16,000' },
-    { name: '하늘', icon: '🌤️', power: '35,000', reward: '🪙70,000' },
+    { name: '숲',   icon: '🌲', power: '500',        reward: '🪙1,000',      color: '#4caf50' },
+    { name: '강',   icon: '🌊', power: '2,500',      reward: '🪙4,000',      color: '#ff9800' },
+    { name: '동굴', icon: '⛰️', power: '12,000',     reward: '🪙16,000',     color: '#f44336' },
+    { name: '하늘', icon: '☁️', power: '50,000',     reward: '🪙70,000',     color: '#9c27b0' },
+    { name: '빙산', icon: '🧊', power: '80,000',     reward: '🪙200,000',    color: '#00bcd4' },
+    { name: '폭풍', icon: '⚡', power: '400,000',    reward: '🪙1,000,000',  color: '#ffd600' },
+    { name: '심연', icon: '🌑', power: '2,500,000',  reward: '🪙4,500,000',  color: '#e91e63' },
+    { name: '신화', icon: '✨', power: '3,500,000',  reward: '🪙12,000,000', color: '#FF6B00' },
   ];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 4 }}>
@@ -215,10 +277,10 @@ function GymTable() {
         <div key={g.name} style={{
           background: 'var(--bg)', borderRadius: 6, padding: '5px 10px',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          borderLeft: '2px solid var(--border)',
+          borderLeft: `2px solid ${g.color || 'var(--border)'}`,
         }}>
-          <span style={{ fontSize: '0.82rem' }}>{g.icon} {g.name}</span>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text2)' }}>필요 ⚡{g.power}</span>
+          <span style={{ fontSize: '0.82rem', color: g.color, fontWeight: 700 }}>{g.icon} {g.name}</span>
+          <span style={{ fontSize: '0.72rem', color: 'var(--text2)' }}>⚡{g.power}</span>
           <span style={{ fontSize: '0.78rem', color: '#FFD700', fontWeight: 700 }}>{g.reward}</span>
         </div>
       ))}

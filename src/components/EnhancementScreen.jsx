@@ -1,10 +1,85 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useGame } from '../App.jsx';
 import {
   getPokemonImageUrl, getPokemonName, getRarityStars, getRarityColor,
   calculatePower, calculateSellPrice, getEnhanceRate, getEnhanceCost,
   getEnhanceFailEffect, formatCoins,
 } from '../utils/gameUtils.js';
+import { EVOLUTIONS } from '../data/evolutionData.js';
+
+// ── 진화 연출 오버레이 ────────────────────────────────────────────────────────
+function EvolutionOverlay({ from, to, onClose }) {
+  const [phase, setPhase] = useState(0);
+  // 0: 기존 포켓몬 실루엣 → 1: 화이트 플래시 → 2: 새 포켓몬 등장 → 3: 텍스트
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase(1), 900);
+    const t2 = setTimeout(() => setPhase(2), 1500);
+    const t3 = setTimeout(() => setPhase(3), 2300);
+    const t4 = setTimeout(() => onClose(), 5000);
+    return () => [t1, t2, t3, t4].forEach(clearTimeout);
+  }, []);
+
+  const particles = useMemo(() => {
+    const colors = ['#fff', '#ffd600', '#42a5f5', '#ce93d8', '#66bb6a', '#ef5350'];
+    return [...Array(14)].map((_, i) => {
+      const angle = (i / 14) * 360 + Math.random() * 15;
+      const dist  = 80 + Math.random() * 80;
+      const size  = 4 + Math.random() * 7;
+      return {
+        color: colors[i % colors.length],
+        dx: Math.cos(angle * Math.PI / 180) * dist,
+        dy: Math.sin(angle * Math.PI / 180) * dist,
+        size,
+        delay: Math.random() * 0.25,
+      };
+    });
+  }, []);
+
+  return (
+    <div
+      className={`evo-overlay evo-phase-${phase}`}
+      onClick={phase >= 2 ? onClose : undefined}
+    >
+      {/* Phase 0: 기존 포켓몬 실루엣 */}
+      {phase === 0 && (
+        <img src={getPokemonImageUrl(from)} className="evo-old-img" alt="" />
+      )}
+
+      {/* Phase 2+: 파티클 + 새 포켓몬 */}
+      {phase >= 2 && (
+        <>
+          {particles.map((p, i) => (
+            <div
+              key={i}
+              className="evo-particle"
+              style={{
+                width: p.size,
+                height: p.size,
+                background: p.color,
+                '--dx': `${p.dx}px`,
+                '--dy': `${p.dy}px`,
+                animationDelay: `${p.delay}s`,
+              }}
+            />
+          ))}
+          <img src={getPokemonImageUrl(to)} className="evo-new-img" alt="" />
+        </>
+      )}
+
+      {/* Phase 3: 텍스트 */}
+      {phase >= 3 && (
+        <div className="evo-text-group">
+          <div className="evo-label">✨ 진화!</div>
+          <div className="evo-names">
+            {getPokemonName(from)}&nbsp;&rarr;&nbsp;{getPokemonName(to)}
+          </div>
+          <div className="evo-tap-hint">탭하여 닫기</div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function EnhancementScreen() {
   const { state, dispatch, saveNow } = useGame();
@@ -20,11 +95,12 @@ export default function EnhancementScreen() {
     if (!enhanceResult) return;
 
     const animMap = {
-      success: 'anim-success',
-      fail: 'anim-fail',
+      success:  'anim-success',
+      evolved:  'anim-success',
+      fail:     'anim-fail',
       shielded: 'anim-fail',
-      decreased: 'anim-fail',
-      destroyed: 'anim-destroyed',
+      decreased:'anim-fail',
+      destroyed:'anim-destroyed',
     };
 
     setCardAnim(animMap[enhanceResult] || '');
@@ -119,6 +195,10 @@ export default function EnhancementScreen() {
   const canAfford = state.coins >= cost;
   const power = calculatePower(pokemon);
 
+  // 진화 예고: 다음 강화 성공 시 진화하는지 확인
+  const evoPreview = EVOLUTIONS[pokemon.pokemonId];
+  const willEvolveNext = !atMax && evoPreview && evoPreview.at === level + 1;
+
   const failEffectLabel = {
     none: '',
     nothing: '실패: 변화 없음',
@@ -128,8 +208,19 @@ export default function EnhancementScreen() {
 
   const rateClass = getSuccessRateClass(actualRate);
 
+  const showEvoOverlay = enhanceResult === 'evolved' && state.lastEvolution;
+
   return (
     <div>
+      {/* 진화 오버레이 */}
+      {showEvoOverlay && (
+        <EvolutionOverlay
+          from={state.lastEvolution.from}
+          to={state.lastEvolution.to}
+          onClose={() => dispatch({ type: 'CLEAR_ENHANCE_RESULT' })}
+        />
+      )}
+
       <div className="flex items-center justify-between mb-12">
         <div className="section-title" style={{ margin: 0 }}>⚗️ 포켓몬 강화</div>
         <button
@@ -214,8 +305,29 @@ export default function EnhancementScreen() {
               {!canAfford && <span style={{ color: 'var(--fail)', marginLeft: 8 }}>코인이 부족합니다!</span>}
             </div>
 
-            {/* 강화 결과 플래시 */}
-            {enhanceResult && (
+            {/* 진화 예고 배너 */}
+            {willEvolveNext && (
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(99,199,99,0.15), rgba(50,150,250,0.1))',
+                border: '1px solid #66bb6a', borderRadius: 8,
+                padding: '8px 14px', textAlign: 'center', fontSize: '0.82rem',
+              }}>
+                <span style={{ color: '#66bb6a', fontWeight: 900 }}>
+                  🌟 이번 강화 성공 시 진화!
+                </span>
+                {' '}
+                <span style={{ color: 'var(--text2)' }}>
+                  +{level + 1} 달성 →{' '}
+                  {Array.isArray(evoPreview.to)
+                    ? evoPreview.to.map(id => getPokemonName(id)).join(' / ')
+                    : getPokemonName(evoPreview.to)
+                  }
+                </span>
+              </div>
+            )}
+
+            {/* 강화 결과 플래시 (진화는 오버레이로 처리) */}
+            {enhanceResult && enhanceResult !== 'evolved' && (
               <div className={`enhance-result-flash ${enhanceResult}`}>
                 {enhanceResult === 'success'   && `🎉 성공! +${level} 달성!`}
                 {enhanceResult === 'fail'      && `💨 실패... (+${level} 유지)`}

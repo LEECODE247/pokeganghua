@@ -1,6 +1,7 @@
 import React, { useReducer, useEffect, useState, useRef, createContext, useContext } from 'react';
-import { generateWildPokemon, calculateSellPrice, getEnhanceRate, getEnhanceFailEffect, getEnhanceCost } from './utils/gameUtils.js';
-import { BALL_CONFIG, POKEMON_NAMES } from './data/pokemonData.js';
+import { generateWildPokemon, calculateSellPrice, getEnhanceRate, getEnhanceFailEffect, getEnhanceCost, createPokemonInstance } from './utils/gameUtils.js';
+import { BALL_CONFIG, POKEMON_NAMES, ALL_POKEMON_BY_RARITY, GEN1_IDS, GEN2_IDS, POKEMON_RARITY_MAP } from './data/pokemonData.js';
+import { EVOLUTIONS } from './data/evolutionData.js';
 import { loadGameState, saveGameState } from './supabase.js';
 import HUD from './components/HUD.jsx';
 import MainScreen from './components/MainScreen.jsx';
@@ -39,7 +40,10 @@ const INITIAL_STATE = {
   dailyBattleCount: 0,
   battleResetDate: '',
   pokedex: [],
-  pokedexRewarded: false,
+  pokedexRewarded: false,   // legacy (하위호환)
+  pokedex1Rewarded: false,  // 1세대 완성 보상
+  pokedex2Rewarded: false,  // 2세대 완성 보상
+  lastEvolution: null,      // { from, to } — 마지막 진화 정보
 };
 
 function gameReducer(state, action) {
@@ -63,10 +67,19 @@ function gameReducer(state, action) {
       const ballCfg = BALL_CONFIG[ballType];
       if (!ballCfg || state.coins < ballCfg.cost || !state.wildPokemon) return state;
 
-      const baseRate  = ballCfg.rates[state.wildPokemon.rarity] || 0;
-      const catchRate = Math.min(1, baseRate + state.captureFailStreak * 0.01);
+      // ★5 아르세우스: 마스터볼 외 포획 불가 (실패 연속 보너스도 없음)
+      const isMythical = state.wildPokemon.rarity === 5;
+      const arceusBlock = isMythical && ballType !== 'master';
+
+      const baseRate  = ballCfg.rates[state.wildPokemon.rarity] ?? 0;
+      const catchRate = arceusBlock
+        ? 0
+        : Math.min(1, baseRate + state.captureFailStreak * 0.01);
       const roll      = Math.random();
-      const result    = roll < catchRate ? 'success' : roll < catchRate + 0.18 ? 'near-miss' : 'fail';
+      const result    = arceusBlock ? 'fail'
+        : roll < catchRate ? 'success'
+        : roll < catchRate + 0.18 ? 'near-miss'
+        : 'fail';
       const captured  = result === 'success';
 
       const newPokedex = captured && !state.pokedex.includes(state.wildPokemon.pokemonId)
@@ -104,11 +117,32 @@ function gameReducer(state, action) {
       let newFailStack = state.enhanceFailStack;
       let result;
 
+      let evolutionInfo = null;
       if (success) {
-        result = 'success';
-        newInventory = newInventory.map(p =>
-          p.instanceId === pokemon.instanceId ? { ...p, enhanceLevel: p.enhanceLevel + 1 } : p
-        );
+        const newLevel = pokemon.enhanceLevel + 1;
+        const evoData  = EVOLUTIONS[pokemon.pokemonId];
+
+        if (evoData && evoData.at === newLevel) {
+          // 진화 발동!
+          const targets    = Array.isArray(evoData.to) ? evoData.to : [evoData.to];
+          const targetId   = targets[Math.floor(Math.random() * targets.length)];
+          const targetRarity = POKEMON_RARITY_MAP[targetId] ?? pokemon.rarity;
+          newInventory = newInventory.map(p =>
+            p.instanceId === pokemon.instanceId
+              ? { ...p, enhanceLevel: newLevel, pokemonId: targetId, rarity: targetRarity }
+              : p
+          );
+          if (!state.pokedex.includes(targetId)) {
+            newFragments = state.fragments; // fragments 유지 (아래서 덮어쓰기 방지)
+          }
+          evolutionInfo = { from: pokemon.pokemonId, to: targetId };
+          result = 'evolved';
+        } else {
+          result = 'success';
+          newInventory = newInventory.map(p =>
+            p.instanceId === pokemon.instanceId ? { ...p, enhanceLevel: newLevel } : p
+          );
+        }
         newFailStack = 0;
       } else {
         newFailStack++;
@@ -134,6 +168,10 @@ function gameReducer(state, action) {
         }
       }
 
+      const newPokedex = evolutionInfo && !state.pokedex.includes(evolutionInfo.to)
+        ? [...state.pokedex, evolutionInfo.to]
+        : state.pokedex;
+
       return {
         ...state,
         coins: state.coins - cost,
@@ -143,11 +181,13 @@ function gameReducer(state, action) {
         enhanceFailStack: newFailStack,
         enhancingPokemonId: result === 'destroyed' ? null : state.enhancingPokemonId,
         totalEnhanced: state.totalEnhanced + 1,
+        lastEvolution: evolutionInfo ?? state.lastEvolution,
+        pokedex: newPokedex,
       };
     }
 
     case 'CLEAR_ENHANCE_RESULT':
-      return { ...state, enhanceResult: null };
+      return { ...state, enhanceResult: null, lastEvolution: null };
 
     case 'REGISTER_BATTLE_POKEMON':
       return { ...state, battlePokemonId: action.pokemonId };
@@ -232,9 +272,40 @@ function gameReducer(state, action) {
       return { ...state, coins: INITIAL_STATE.coins };
 
     case 'CLAIM_POKEDEX_REWARD': {
+      // legacy (하위호환 — 구버전 클라이언트 대응용, 실제로는 CLAIM_POKEDEX1_REWARD 사용)
       const totalPokemon = Object.keys(POKEMON_NAMES).length;
       if (state.pokedex.length < totalPokemon || state.pokedexRewarded) return state;
       return { ...state, fragments: state.fragments + 10000, pokedexRewarded: true };
+    }
+
+    case 'CLAIM_POKEDEX1_REWARD': {
+      // 1세대 완성 → 💎 파편 10,000개
+      if (state.pokedex1Rewarded) return state;
+      const caught1 = new Set(state.pokedex);
+      const gen1Complete = GEN1_IDS.every(id => caught1.has(id));
+      if (!gen1Complete) return state;
+      return { ...state, fragments: state.fragments + 10000, pokedex1Rewarded: true };
+    }
+
+    case 'CLAIM_POKEDEX2_REWARD': {
+      // 2세대 완성 → 랜덤 15강 S급 ★4 포켓몬
+      if (state.pokedex2Rewarded) return state;
+      const caught2 = new Set(state.pokedex);
+      const gen2Complete = GEN2_IDS.every(id => caught2.has(id));
+      if (!gen2Complete) return state;
+      const rarity4Pool = ALL_POKEMON_BY_RARITY[4];
+      const rewardId = rarity4Pool[Math.floor(Math.random() * rarity4Pool.length)];
+      const rewardPokemon = {
+        ...createPokemonInstance(rewardId, 4),
+        sizeGrade: 'S',
+        enhanceLevel: 15,
+      };
+      return {
+        ...state,
+        inventory: [...state.inventory, rewardPokemon],
+        pokedex: caught2.has(rewardId) ? state.pokedex : [...state.pokedex, rewardId],
+        pokedex2Rewarded: true,
+      };
     }
 
     case 'CLAIM_COINS': {
@@ -327,6 +398,8 @@ function GameApp({ accountId, nickname, initialState, onLogout }) {
     wildPokemon: null,
     captureResult: null,
     captureFailStreak: 0,
+    // 구버전 pokedexRewarded → pokedex1Rewarded 마이그레이션
+    pokedex1Rewarded: merged.pokedex1Rewarded || merged.pokedexRewarded || false,
   };
 
   const [state, dispatch] = useReducer(gameReducer, safeState);

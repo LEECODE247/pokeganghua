@@ -108,7 +108,9 @@ export default function CaptureScreen() {
 
   const rarityColor = wildPokemon ? getRarityColor(wildPokemon.rarity) : 'var(--text)';
   const isLegendary = wildPokemon?.rarity === 4;
+  const isMythical  = wildPokemon?.rarity === 5;
   const sellPrice = wildPokemon ? calculateSellPrice(wildPokemon) : 0;
+  const isInPokedex = wildPokemon ? state.pokedex.includes(wildPokemon.pokemonId) : false;
 
   const imgAnimClass = phase === PHASE.APPEARING ? 'anim-bounce'
     : phase === PHASE.SHAKING && captureResult === 'near-miss' ? 'anim-nearmiss'
@@ -145,10 +147,29 @@ export default function CaptureScreen() {
         {/* 야생 포켓몬 카드 */}
         {wildPokemon && (
           <div
-            className={`wild-pokemon-card${wildPokemon.isGolden ? ' golden' : ''}${isLegendary ? ' legendary' : ''}`}
-            style={isLegendary ? { borderColor: '#e040fb', boxShadow: '0 0 30px rgba(224,64,251,0.5)' } : {}}
+            className={`wild-pokemon-card${wildPokemon.isGolden ? ' golden' : ''}${isLegendary ? ' legendary' : ''}${isMythical ? ' mythical' : ''}`}
+            style={
+              isMythical  ? { borderColor: '#FF6B00', boxShadow: '0 0 40px rgba(255,107,0,0.75)' } :
+              isLegendary ? { borderColor: '#e040fb', boxShadow: '0 0 30px rgba(224,64,251,0.5)' } : {}
+            }
           >
+            {/* 도감 등록 여부 뱃지 (왼쪽 상단) */}
+            <div style={{
+              position: 'absolute', top: 6, left: 8,
+              background: isInPokedex ? 'rgba(76,175,80,0.18)' : 'rgba(255,214,0,0.15)',
+              border: `1px solid ${isInPokedex ? '#4caf50' : '#ffd700'}`,
+              color: isInPokedex ? '#4caf50' : '#ffd700',
+              fontSize: '0.6rem', fontWeight: 900,
+              padding: '2px 7px', borderRadius: 10,
+              letterSpacing: '0.02em',
+            }}>
+              {isInPokedex ? '✓ 도감등록' : '★ 미등록'}
+            </div>
+
             {wildPokemon.isGolden && <div className="golden-badge">✨ 황금!</div>}
+            {isMythical && !wildPokemon.isGolden && (
+              <div className="golden-badge" style={{ background: 'linear-gradient(135deg,#FF6B00,#FFD700)', color: '#000' }}>🌟 신화!</div>
+            )}
             {isLegendary && !wildPokemon.isGolden && (
               <div className="golden-badge" style={{ background: '#e040fb' }}>⭐ 전설!</div>
             )}
@@ -161,6 +182,8 @@ export default function CaptureScreen() {
                 style={{
                   filter: wildPokemon.isGolden
                     ? 'drop-shadow(0 0 12px rgba(255,214,0,0.9)) sepia(0.3) brightness(1.3)'
+                    : isMythical
+                    ? 'drop-shadow(0 0 20px rgba(255,107,0,1)) brightness(1.1)'
                     : isLegendary
                     ? 'drop-shadow(0 0 16px rgba(224,64,251,0.8))'
                     : undefined,
@@ -206,12 +229,26 @@ export default function CaptureScreen() {
         {/* 볼 선택 — 코인 직접 차감 */}
         {phase === PHASE.READY && (
           <div className="ball-buttons">
+            {/* ★5 신화 경고 배너 */}
+            {isMythical && (
+              <div style={{
+                width: '100%', textAlign: 'center', padding: '6px 10px',
+                background: 'rgba(255,107,0,0.15)', border: '1px solid #FF6B00',
+                borderRadius: 8, marginBottom: 6,
+                color: '#FF6B00', fontWeight: 800, fontSize: '0.8rem',
+              }}>
+                ⚠️ 아르세우스는 마스터볼로만 포획 가능! (10%)
+              </div>
+            )}
             {Object.entries(BALL_CONFIG).map(([type, cfg]) => {
               const canAfford = state.coins >= cfg.cost;
               const rarity = wildPokemon?.rarity || 1;
-              const baseRate = cfg.rates[rarity] || 0;
+              const baseRate = cfg.rates[rarity] ?? 0;
               const streakBonus = captureFailStreak * 0.01;
-              const displayRate = Math.min(100, Math.round((baseRate + streakBonus) * 100));
+              // ★5는 마스터볼 외 0%, 실패 연속 보너스 없음
+              const displayRate = (isMythical && type !== 'master')
+                ? 0
+                : Math.min(100, Math.round((baseRate + streakBonus) * 100));
 
               return (
                 <button
@@ -295,7 +332,8 @@ export default function CaptureScreen() {
               <div style={{ color: rarityColor, fontWeight: 700, fontSize: '1rem', marginTop: 6 }}>
                 {getPokemonName(wildPokemon.pokemonId)} 포획!
                 {wildPokemon.isGolden && <span style={{ color: 'var(--gold)', marginLeft: 6 }}>✨ 황금!</span>}
-                {isLegendary && <span style={{ color: '#e040fb', marginLeft: 6 }}>⭐ 전설!</span>}
+                {isMythical && <span style={{ color: '#FF6B00', marginLeft: 6 }}>🌟 신화!</span>}
+                {isLegendary && !isMythical && <span style={{ color: '#e040fb', marginLeft: 6 }}>⭐ 전설!</span>}
               </div>
               {/* 판매가 미리보기 */}
               {!justSold && (

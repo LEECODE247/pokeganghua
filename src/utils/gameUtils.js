@@ -1,4 +1,5 @@
-import { POKEMON_NAMES, ALL_POKEMON_BY_RARITY, ENHANCE_CONFIG } from '../data/pokemonData.js';
+import { POKEMON_NAMES, ALL_POKEMON_BY_RARITY, ENHANCE_CONFIG, POKEMON_POWER_BASE } from '../data/pokemonData.js';
+import { WILD_EXCLUDED } from '../data/evolutionData.js';
 
 let _instanceCounter = 0;
 
@@ -11,16 +12,18 @@ export function getPokemonName(id) {
 }
 
 // 글로벌 여행 — 전체 풀에서 랜덤 추첨
-// 출현 확률: ★1=52%, ★2=30%, ★3=16%, ★4=2%
+// 출현 확률: ★5=0.5%, ★4=2%, ★3=16%, ★2=29.5%, ★1=52%
 export function generateWildPokemon() {
   const roll = Math.random();
   let rarity;
-  if (roll < 0.02)       rarity = 4;  // 2% 전설
-  else if (roll < 0.18)  rarity = 3;  // 16% 영웅
-  else if (roll < 0.48)  rarity = 2;  // 30% 희귀
+  if (roll < 0.005)      rarity = 5;  // 0.5% 신화
+  else if (roll < 0.025) rarity = 4;  // 2% 전설
+  else if (roll < 0.185) rarity = 3;  // 16% 영웅
+  else if (roll < 0.48)  rarity = 2;  // 29.5% 희귀
   else                   rarity = 1;  // 52% 일반
 
-  const pool = ALL_POKEMON_BY_RARITY[rarity];
+  // 진화로만 얻을 수 있는 포켓몬은 야생 출현 제외
+  const pool = ALL_POKEMON_BY_RARITY[rarity].filter(id => !WILD_EXCLUDED.has(id));
   const pokemonId = pool[Math.floor(Math.random() * pool.length)];
   return createPokemonInstance(pokemonId, rarity);
 }
@@ -46,8 +49,9 @@ export function createPokemonInstance(pokemonId, rarity) {
 }
 
 export function calculatePower(pokemon) {
-  // 희귀도별 기준 전투력 (기존 스탯 합산 평균과 동일한 스케일 유지)
-  const rarityBase = { 1: 200, 2: 750, 3: 2600, 4: 12000 }[pokemon.rarity] || 200;
+  // 포켓몬별 개별 기준 전투력 → 없으면 희귀도 기본값
+  const rarityDefault = { 1: 200, 2: 750, 3: 2600, 4: 12000, 5: 40000 }[pokemon.rarity] || 200;
+  const rarityBase = POKEMON_POWER_BASE[pokemon.pokemonId] ?? rarityDefault;
   const sizeMult = { S: 1.2, A: 1.1, B: 1.0, C: 0.9 }[pokemon.sizeGrade] || 1.0;
   const lv = pokemon.enhanceLevel;
   // +14까지: 선형 증가 / +15부터: 성공마다 전투력 2배
@@ -58,7 +62,7 @@ export function calculatePower(pokemon) {
 }
 
 export function calculateSellPrice(pokemon) {
-  const basePrice = { 1: 200, 2: 3000, 3: 25000, 4: 100000 }[pokemon.rarity] || 200;
+  const basePrice = { 1: 200, 2: 3000, 3: 25000, 4: 100000, 5: 500000 }[pokemon.rarity] || 200;
   const sizeMult = { S: 2.0, A: 1.5, B: 1.0, C: 0.7 }[pokemon.sizeGrade];
   const lv = pokemon.enhanceLevel;
   const enhanceMult = lv <= 14
@@ -76,12 +80,13 @@ export function getEnhanceRate(currentLevel)       { return getEnhanceConfig(cur
 export function getEnhanceFailEffect(currentLevel) { return getEnhanceConfig(currentLevel)?.fail ?? 'none'; }
 
 export function getRarityStars(rarity) {
+  if (rarity === 5) return '★★★★★';
   if (rarity === 4) return '★★★★';
   return '★'.repeat(rarity) + '☆'.repeat(3 - rarity);
 }
 
 export function getRarityColor(rarity) {
-  return { 1: '#9e9e9e', 2: '#42a5f5', 3: '#ffd600', 4: '#e040fb' }[rarity] || '#fff';
+  return { 1: '#9e9e9e', 2: '#42a5f5', 3: '#ffd600', 4: '#e040fb', 5: '#FF6B00' }[rarity] || '#fff';
 }
 
 export function formatCoins(n) {

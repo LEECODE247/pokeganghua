@@ -15,8 +15,16 @@ export default function BattleScreen() {
   const [battleResult, setBattleResult] = useState(null);
   const [isBattling, setIsBattling] = useState(false);
   const [loading, setLoading]       = useState(false);
-  const [fightAnim, setFightAnim]   = useState(null); // { opponent, step, myHp, oppHp, won }
+  const [fightAnim, setFightAnim]   = useState(null); // { opponent, step, myHp, oppHp, won, moveName }
   const fightTimers = React.useRef([]);
+
+  // PvP 기술 풀
+  const PVP_MY_MOVES  = ['⚡ 전기충격', '🌟 체력흡수', '💥 폭발기합', '🔥 분노의불꽃', '🌀 사이코키네시스', '🐲 드래곤클로'];
+  const PVP_OPP_MOVES = ['💢 역린', '☠️ 독침', '🌊 파도타기', '🪨 돌진', '🌀 하이퍼빔', '⭐ 찬란한바람'];
+  const PVP_THEME = {
+    bg: 'linear-gradient(170deg,#0e0420 0%,#050210 100%)',
+    color: '#ce93d8', glow: 'rgba(206,147,216,0.85)', projClass: 'proj-pvp',
+  };
 
   const myBattlePokemon = inventory.find(p => p.instanceId === battlePokemonId) || null;
 
@@ -75,27 +83,33 @@ export default function BattleScreen() {
     const won    = Math.random() < winChance;
     const prize  = won ? opponent.battle_pokemon.sellPrice : 0;
 
-    // 전투 애니메이션 시작 (결과는 미리 계산, 나중에 공개)
-    setFightAnim({ opponent, step: 0, myHp: 100, oppHp: 100, won });
+    const add = (fn, ms) => { const t = setTimeout(fn, ms); fightTimers.current.push(t); };
 
-    const addTimer = (fn, ms) => {
-      const t = setTimeout(fn, ms);
-      fightTimers.current.push(t);
-      return t;
-    };
+    const move1 = PVP_MY_MOVES[Math.floor(Math.random() * PVP_MY_MOVES.length)];
+    const move2 = PVP_OPP_MOVES[Math.floor(Math.random() * PVP_OPP_MOVES.length)];
+    const move3 = PVP_MY_MOVES[Math.floor(Math.random() * PVP_MY_MOVES.length)];
 
-    // step 시퀀스: 0=입장, 1=내공격, 2=상대공격, 3=내공격2, 4=결과
-    addTimer(() => setFightAnim(f => ({ ...f, step: 1 })), 700);
-    addTimer(() => setFightAnim(f => ({ ...f, step: 2, oppHp: won ? Math.max(10, 60 - Math.round(ratio * 20)) : 75 })), 1400);
-    addTimer(() => setFightAnim(f => ({ ...f, step: 3, myHp: won ? 70 : Math.max(10, 40 - Math.round((1/ratio) * 20)) })), 2100);
-    addTimer(() => setFightAnim(f => ({ ...f, step: 4, oppHp: won ? Math.max(0, f?.oppHp - 30) : f?.oppHp, myHp: won ? f?.myHp : Math.max(0, f?.myHp - 30) })), 2800);
-    addTimer(() => {
+    const oppHp1     = won ? Math.max(22, Math.round(72 - ratio * 45))      : Math.max(55, Math.round(88 - ratio * 28));
+    const myHp1      = won ? Math.max(45, Math.round(85 - (1/ratio) * 22))  : Math.max(12, Math.round(62 - (1/ratio) * 30));
+    const oppHpFinal = won ? 0    : oppHp1;
+    const myHpFinal  = won ? myHp1 : 0;
+
+    // step: 0=입장, 1=내차지, 2=내공격, 3=상대차지, 4=상대공격, 5=결정타차지, 6=결정타, 7=결과
+    setFightAnim({ opponent, step: 0, myHp: 100, oppHp: 100, won, moveName: null });
+    add(() => setFightAnim(f => ({ ...f, step: 1, moveName: move1 })),                        600);
+    add(() => setFightAnim(f => ({ ...f, step: 2, oppHp: oppHp1 })),                         1150);
+    add(() => setFightAnim(f => ({ ...f, step: 3, moveName: move2 })),                        2000);
+    add(() => setFightAnim(f => ({ ...f, step: 4, myHp: myHp1 })),                           2550);
+    add(() => setFightAnim(f => ({ ...f, step: 5, moveName: move3 })),                        3400);
+    add(() => setFightAnim(f => ({ ...f, step: 6, oppHp: oppHpFinal, myHp: myHpFinal })),    3950);
+    add(() => setFightAnim(f => ({ ...f, step: 7 })),                                         4700);
+    add(() => {
       dispatch({ type: won ? 'BATTLE_WIN' : 'BATTLE_LOSE', coins: prize });
       setBattleResult({ won, prize, opponentNickname: opponent.nickname, opponentPokemon: opponent.battle_pokemon, myPower: myPow, oppPower: oppPow, winChance: Math.round(winChance * 100) });
       setFightAnim(null);
       setIsBattling(false);
       fightTimers.current = [];
-    }, 3800);
+    }, 6300);
   }
 
   return (
@@ -308,84 +322,94 @@ export default function BattleScreen() {
         </>
       )}
 
-      {/* ── 전투 애니메이션 오버레이 ── */}
-      {fightAnim && (
-        <div className="battle-anim-overlay">
-          {fightAnim.step < 4 && (
-            <>
-              <div className="battle-round-text" key={fightAnim.step}>
-                {fightAnim.step === 0 && '⚔️ 배틀 시작!'}
-                {fightAnim.step === 1 && '💥 공격!'}
-                {fightAnim.step === 2 && '💢 반격!'}
-                {fightAnim.step === 3 && '⚡ 결정타!'}
-              </div>
-              <div className="battle-stage">
-                {/* 내 포켓몬 */}
-                <div className="battle-pokemon-wrap">
-                  <img
-                    src={getPokemonImageUrl(myBattlePokemon.pokemonId)}
-                    className={`battle-pokemon-img ${fightAnim.step === 1 || fightAnim.step === 3 ? 'attack-right' : fightAnim.step === 2 ? 'hit' : ''}`}
-                    alt=""
-                    key={`my-${fightAnim.step}`}
-                  />
-                  <div className="battle-hp-bar-wrap">
-                    <div className="battle-hp-bar" style={{ width: `${fightAnim.myHp}%`, background: fightAnim.myHp > 50 ? '#4caf50' : fightAnim.myHp > 20 ? '#FFD700' : '#ef5350' }} />
+      {/* ── 전투 애니메이션 오버레이 (새 bov 시스템) ── */}
+      {fightAnim && myBattlePokemon && (() => {
+        const { step, myHp, oppHp, won, moveName, opponent } = fightAnim;
+        const oppPokemonId = opponent.battle_pokemon.pokemonId;
+        const t = PVP_THEME;
+
+        const myAnim =
+          step === 1 || step === 5 ? 'bmon-charge' :
+          step === 2 || step === 6 ? 'bmon-lunge-r' :
+          step === 4               ? 'bmon-hit' :
+          step === 7               ? (won ? 'bmon-winner' : 'bmon-loser') : '';
+
+        const oppAnim =
+          step === 3               ? 'bmon-charge' :
+          step === 4               ? 'bmon-lunge-l' :
+          step === 2 || step === 6 ? 'bmon-hit' :
+          step === 7               ? (won ? 'bmon-loser' : 'bmon-winner') : '';
+
+        const showProj = step === 2 || step === 4 || step === 6;
+        const projDir  = (step === 2 || step === 6) ? 'right' : 'left';
+        const hpColor  = hp => hp > 50 ? '#4caf50' : hp > 20 ? '#FFD700' : '#ef5350';
+
+        return (
+          <div className="bov" style={{ background: t.bg }}>
+
+            {/* 상대 */}
+            <div className="bov-opp-row">
+              <div className="bov-hpbox">
+                <div className="bov-hpbox-name">{opponent.nickname}의 포켓몬</div>
+                <div className="bov-hpbox-bar-row">
+                  <span className="bov-hp-label">HP</span>
+                  <div className="bov-hp-track">
+                    <div className="bov-hp-fill" style={{ width: `${oppHp}%`, background: hpColor(oppHp) }} />
                   </div>
-                  <div className="battle-label">나</div>
-                </div>
-
-                <div className="battle-vs-text">VS</div>
-
-                {/* 상대 포켓몬 */}
-                <div className="battle-pokemon-wrap">
-                  <img
-                    src={getPokemonImageUrl(fightAnim.opponent.battle_pokemon.pokemonId)}
-                    className={`battle-pokemon-img ${fightAnim.step === 2 ? 'attack-left' : fightAnim.step === 1 || fightAnim.step === 3 ? 'hit' : ''}`}
-                    alt=""
-                    key={`opp-${fightAnim.step}`}
-                    style={{ transform: 'scaleX(-1)' }}
-                  />
-                  <div className="battle-hp-bar-wrap">
-                    <div className="battle-hp-bar" style={{ width: `${fightAnim.oppHp}%`, background: fightAnim.oppHp > 50 ? '#4caf50' : fightAnim.oppHp > 20 ? '#FFD700' : '#ef5350' }} />
-                  </div>
-                  <div className="battle-label">{fightAnim.opponent.nickname}</div>
+                  <span className="bov-hp-num" style={{ color: hpColor(oppHp) }}>{oppHp}</span>
                 </div>
               </div>
-            </>
-          )}
+              <img
+                src={getPokemonImageUrl(oppPokemonId)}
+                className={`bov-mon bov-mon-opp ${oppAnim}`}
+                style={{ '--glow': t.glow }}
+                key={`opp-${step}`}
+                alt=""
+              />
+            </div>
 
-          {fightAnim.step === 4 && (
-            <>
-              <div className="battle-result-reveal" style={{ color: fightAnim.won ? '#4caf50' : '#ef5350' }}>
-                {fightAnim.won ? '🏆 승리!' : '💀 패배'}
-              </div>
-              <div className="battle-stage">
-                <div className="battle-pokemon-wrap">
-                  <img
-                    src={getPokemonImageUrl(myBattlePokemon.pokemonId)}
-                    className={`battle-pokemon-img ${fightAnim.won ? 'winner' : 'loser'}`}
-                    alt=""
-                  />
-                </div>
-                <div className="battle-vs-text" style={{ color: 'var(--text2)' }}>VS</div>
-                <div className="battle-pokemon-wrap">
-                  <img
-                    src={getPokemonImageUrl(fightAnim.opponent.battle_pokemon.pokemonId)}
-                    className={`battle-pokemon-img ${fightAnim.won ? 'loser' : 'winner'}`}
-                    alt=""
-                    style={{ transform: 'scaleX(-1)' }}
-                  />
-                </div>
-              </div>
-              {fightAnim.won && (
-                <div style={{ color: '#FFD700', fontWeight: 800, fontSize: '1.3rem' }}>
-                  +🪙{formatCoins(fightAnim.opponent.battle_pokemon.sellPrice)}
+            {/* 필드 */}
+            <div className="bov-field">
+              {moveName && step >= 1 && step <= 6 && (
+                <div className="bov-move-name" key={`move-${step}`} style={{ color: t.color, textShadow: `0 0 16px ${t.glow}` }}>
+                  {moveName}
                 </div>
               )}
-            </>
-          )}
-        </div>
-      )}
+              {showProj && (
+                <div className={`bov-proj bov-proj-${projDir} ${t.projClass}`} key={`proj-${step}`} />
+              )}
+            </div>
+
+            {/* 나 */}
+            <div className="bov-my-row">
+              <img
+                src={getPokemonImageUrl(myBattlePokemon.pokemonId)}
+                className={`bov-mon bov-mon-my ${myAnim}`}
+                style={{ '--glow': t.glow }}
+                key={`my-${step}`}
+                alt=""
+              />
+              <div className="bov-hpbox bov-hpbox-my">
+                <div className="bov-hpbox-name">나의 {getPokemonName(myBattlePokemon.pokemonId)}</div>
+                <div className="bov-hpbox-bar-row">
+                  <span className="bov-hp-label">HP</span>
+                  <div className="bov-hp-track">
+                    <div className="bov-hp-fill" style={{ width: `${myHp}%`, background: hpColor(myHp) }} />
+                  </div>
+                  <span className="bov-hp-num" style={{ color: hpColor(myHp) }}>{myHp}</span>
+                </div>
+              </div>
+            </div>
+
+            {step === 7 && (
+              <div className="bov-result" style={{ color: won ? '#4caf50' : '#ef5350' }}>
+                <div className="bov-result-text">{won ? '🏆 승리!' : '💀 패배...'}</div>
+                {won && <div className="bov-reward">+🪙{formatCoins(opponent.battle_pokemon.sellPrice)}</div>}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* ── 배틀 결과 오버레이 ── */}
       {battleResult && (
