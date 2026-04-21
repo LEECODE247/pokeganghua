@@ -78,13 +78,9 @@ export async function loadGameState(accountId) {
 }
 
 export async function saveGameState(accountId, gameState) {
-  await supabase
-    .from('game_saves')
-    .upsert({
-      account_id: accountId,
-      game_state: gameState,
-      updated_at: new Date().toISOString(),
-    });
+  await supabase.functions.invoke('save-game', {
+    body: { accountId, gameState },
+  });
 }
 
 // ── 배틀 ────────────────────────────────────────────────
