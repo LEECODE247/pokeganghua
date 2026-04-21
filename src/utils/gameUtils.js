@@ -117,7 +117,7 @@ const FIXED_SYNERGIES = [
     id: 'legendary_birds', name: '전설의 새', icon: '🦅',
     desc: '썬더 · 파이어 · 프리저',
     requiredIds: [145, 146, 144],
-    multiplier: 2.5, kind: 'fixed_all',
+    multiplier: 1.5, kind: 'fixed_all',
   },
   {
     id: 'gen1_starters', name: '1세대 삼인방', icon: '1️⃣',
@@ -141,7 +141,7 @@ const FIXED_SYNERGIES = [
 
 // 조합표 카탈로그 (UI 표시용)
 export const SYNERGY_CATALOG = [
-  { fixedId: 'legendary_birds', name: '전설의 새',    icon: '🦅', desc: '썬더 + 파이어 + 프리저',          bonus: '전체 ×2.5',       color: '#4fc3f7' },
+  { fixedId: 'legendary_birds', name: '전설의 새',    icon: '🦅', desc: '썬더 + 파이어 + 프리저',          bonus: '전체 ×1.5',       color: '#4fc3f7' },
   { fixedId: 'gen1_starters',   name: '1세대 삼인방', icon: '1️⃣', desc: '이상해풀 + 거북왕 + 리자몽',       bonus: '전체 ×3',         color: '#81c784' },
   { fixedId: 'gen2_starters',   name: '2세대 삼인방', icon: '2️⃣', desc: '메가니움 + 장크로다일 + 블레이범', bonus: '전체 ×3',         color: '#4db6ac' },
   { fixedId: 'divine_blessing', name: '신의 가호',    icon: '✨', desc: '아르세우스 + 임의 2마리',          bonus: '나머지 ×2',       color: '#ffb74d' },
