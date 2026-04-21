@@ -392,6 +392,24 @@ function getStoredSession() {
 function setStoredSession(session) {
   localStorage.setItem('pokemonGacha_session', JSON.stringify(session));
 }
+
+// ── 로컬 게임 상태 백업 (새로고침/탭 닫기 대비) ──
+function saveStateLocal(accountId, state) {
+  try {
+    localStorage.setItem(
+      `pokemonGacha_state_${accountId}`,
+      JSON.stringify({ state, savedAt: Date.now() })
+    );
+  } catch {}
+}
+function loadStateLocal(accountId) {
+  try {
+    const raw = localStorage.getItem(`pokemonGacha_state_${accountId}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed; // { state, savedAt }
+  } catch { return null; }
+}
 function clearStoredSession() {
   localStorage.removeItem('pokemonGacha_session');
 }
@@ -406,24 +424,38 @@ export default function App() {
     const stored = getStoredSession();
     if (!stored) { setPhase('login'); return; }
 
-    // 저장된 세션으로 게임 상태 복원
+    // 저장된 세션으로 게임 상태 복원 (Supabase vs localStorage 중 최신 사용)
     loadGameState(stored.accountId)
       .then(gameState => {
-        setSession({ ...stored, initialState: gameState });
+        const local = loadStateLocal(stored.accountId);
+        const supabaseAt = gameState?._savedAt ?? 0;
+        const localAt    = local?.savedAt ?? 0;
+        const best = localAt > supabaseAt ? local.state : gameState;
+        setSession({ ...stored, initialState: best });
         setPhase('game');
       })
       .catch(() => {
-        clearStoredSession();
-        setPhase('login');
+        // Supabase 실패 시 로컬 백업으로 복원 시도
+        const local = loadStateLocal(stored.accountId);
+        if (local?.state) {
+          setSession({ ...stored, initialState: local.state });
+          setPhase('game');
+        } else {
+          clearStoredSession();
+          setPhase('login');
+        }
       });
   }, []);
 
   function handleLogin({ accountId, nickname }) {
     const s = { accountId, nickname };
     setStoredSession(s);
-    // 로그인 시 게임 상태를 Supabase에서 불러옴
     loadGameState(accountId).then(gameState => {
-      setSession({ ...s, initialState: gameState });
+      const local = loadStateLocal(accountId);
+      const supabaseAt = gameState?._savedAt ?? 0;
+      const localAt    = local?.savedAt ?? 0;
+      const best = localAt > supabaseAt ? local.state : gameState;
+      setSession({ ...s, initialState: best });
       setPhase('game');
     });
   }
@@ -480,20 +512,22 @@ function GameApp({ accountId, nickname, initialState, onLogout }) {
   const [state, dispatch] = useReducer(gameReducer, safeState);
   const saveTimer = useRef(null);
 
-  // 상태 변경 시 3초 디바운스로 Supabase 저장
+  // 상태 변경 시 localStorage 즉시 저장 + Supabase 1초 디바운스
   useEffect(() => {
+    saveStateLocal(accountId, state);
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      saveGameState(accountId, state);
-    }, 3000);
+      saveGameState(accountId, { ...state, _savedAt: Date.now() });
+    }, 1000);
     return () => clearTimeout(saveTimer.current);
   }, [state, accountId]);
 
-  // 탭/창 닫기 전 즉시 저장
+  // 탭/창 닫기 전 즉시 저장 (localStorage는 동기라 항상 성공, Supabase는 시도)
   useEffect(() => {
     const flush = () => {
       clearTimeout(saveTimer.current);
-      saveGameState(accountId, state);
+      saveStateLocal(accountId, state);
+      saveGameState(accountId, { ...state, _savedAt: Date.now() });
     };
     window.addEventListener('beforeunload', flush);
     return () => window.removeEventListener('beforeunload', flush);
