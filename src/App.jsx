@@ -80,7 +80,7 @@ function gameReducer(state, action) {
         ? 0
         : isMythical
         ? baseRate  // 아르세우스: fail streak 보너스 없음, 항상 고정 10%
-        : Math.min(1, baseRate + state.captureFailStreak * 0.01);
+        : Math.min(1, baseRate + Math.min(state.captureFailStreak, 10) * 0.01);
       const roll      = Math.random();
       const result    = arceusBlock ? 'fail'
         : roll < catchRate ? 'success'

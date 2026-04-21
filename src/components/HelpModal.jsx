@@ -36,7 +36,7 @@ export default function HelpModal({ onClose }) {
         <Section title="🌍 여행 (포켓몬 포획)">
           <Row><b>여행하기</b> 버튼을 누르면 야생 포켓몬이 나타납니다.</Row>
           <Row>볼을 선택하면 코인이 즉시 차감되고 포획을 시도합니다.</Row>
-          <Row>포획 실패가 이어질수록 다음 포획률이 <b>1%씩</b> 누적 상승합니다.</Row>
+          <Row>포획 실패가 이어질수록 다음 포획률이 <b>1%씩</b> 누적 상승합니다. (최대 <b>+10%</b>)</Row>
           <Row>포획 성공 시 포켓몬이 가방에 추가됩니다.</Row>
           <RarityTable />
         </Section>

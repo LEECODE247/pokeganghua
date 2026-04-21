@@ -138,7 +138,7 @@ export default function CaptureScreen() {
       {captureFailStreak >= 2 && phase !== PHASE.RESULT && (
         <div style={{ textAlign: 'center', marginBottom: 12 }}>
           <span className="streak-badge">
-            🔥 {captureFailStreak}연속 실패! +{captureFailStreak}% 포획률 상승
+            🔥 {captureFailStreak}연속 실패! +{Math.min(captureFailStreak, 10)}% 포획률 상승
           </span>
         </div>
       )}
@@ -260,7 +260,7 @@ export default function CaptureScreen() {
               const canAfford = state.coins >= cfg.cost;
               const rarity = wildPokemon?.rarity || 1;
               const baseRate = cfg.rates[rarity] ?? 0;
-              const streakBonus = captureFailStreak * 0.01;
+              const streakBonus = Math.min(captureFailStreak, 10) * 0.01;
               // ★5는 마스터볼 외 0%, 실패 연속 보너스 없음
               const displayRate = (isMythical && type !== 'master')
                 ? 0
@@ -367,7 +367,7 @@ export default function CaptureScreen() {
 
           {captureResult !== 'success' && captureFailStreak > 0 && (
             <div className="result-sub">
-              실패 연속: {captureFailStreak}회 → 다음 시도 +{captureFailStreak}% 상승
+              실패 연속: {captureFailStreak}회 → 다음 시도 +{Math.min(captureFailStreak, 10)}% 상승{captureFailStreak >= 10 ? ' (최대)' : ''}
             </div>
           )}
 
