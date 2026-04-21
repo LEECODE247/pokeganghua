@@ -58,7 +58,7 @@ export default function LoginScreen({ onLogin }) {
         <div style={{ fontSize: '3rem', marginBottom: 8 }}>🎮</div>
         <div style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: 4 }}>포켓가챠</div>
         <div style={{ fontSize: '0.85rem', color: 'var(--text2)', marginBottom: 28 }}>
-          포획 · 강화 · 정복
+          포획 · 진화 · 배틀
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

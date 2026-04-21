@@ -4,6 +4,7 @@ import {
   getPokemonImageUrl, getPokemonName, getRarityStars, getRarityColor,
   calculatePower, calculateSellPrice, formatCoins,
 } from '../utils/gameUtils.js';
+import { POKEMON_TYPES, TYPE_META } from '../data/pokemonData.js';
 import PokemonModal from './PokemonModal.jsx';
 
 const SORTS = [
@@ -13,12 +14,12 @@ const SORTS = [
   { id: 'enhanceLevel', label: '레벨'   },
 ];
 
-const RARITY_LABEL = { 0: '전체', 1: '일반', 2: '희귀', 3: '영웅', 4: '전설' };
+const RARITY_LABEL = { 0: '전체', 1: '일반', 2: '희귀', 3: '영웅', 4: '전설', 5: '신화' };
 
 export default function InventoryScreen() {
   const { state, dispatch } = useGame();
   const [selectedPokemon, setSelectedPokemon] = useState(null);
-  const [sort, setSort] = useState('capturedAt');
+  const [sort, setSort] = useState('power');
   const [filterRarity, setFilterRarity] = useState(0);
 
   const sorted = [...state.inventory]
@@ -55,7 +56,7 @@ export default function InventoryScreen() {
       {/* 필터 */}
       <div className="flex gap-8 mb-8" style={{ flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-          {[0, 1, 2, 3, 4].map(r => (
+          {[0, 1, 2, 3, 4, 5].map(r => (
             <button
               key={r}
               className={`btn btn-sm btn-ghost${filterRarity === r ? ' active' : ''}`}
@@ -108,13 +109,17 @@ export default function InventoryScreen() {
             const power = calculatePower(pokemon);
             const name = getPokemonName(pokemon.pokemonId);
             const isLegendary = pokemon.rarity === 4;
+            const isMythical  = pokemon.rarity === 5;
+            const cardStyle = isMythical
+              ? { border: '2px solid #FF6B00', boxShadow: '0 0 12px rgba(255,107,0,0.5)' }
+              : !pokemon.isGolden && isLegendary
+              ? { border: '2px solid #e040fb', boxShadow: '0 0 8px rgba(224,64,251,0.3)' }
+              : {};
             return (
               <div
                 key={pokemon.instanceId}
                 className={`inv-card${pokemon.isGolden ? ' golden' : ''}`}
-                style={isLegendary && !pokemon.isGolden
-                  ? { borderColor: '#e040fb', boxShadow: '0 0 8px rgba(224,64,251,0.3)' }
-                  : {}}
+                style={cardStyle}
                 onClick={() => setSelectedPokemon(pokemon)}
               >
                 {pokemon.enhanceLevel > 0 && (
@@ -126,11 +131,27 @@ export default function InventoryScreen() {
                   className="inv-img"
                   style={pokemon.isGolden
                     ? { filter: 'sepia(0.3) brightness(1.4) drop-shadow(0 0 6px rgba(255,214,0,0.8))' }
+                    : isMythical
+                    ? { filter: 'drop-shadow(0 0 8px rgba(255,107,0,0.8))' }
                     : isLegendary
                     ? { filter: 'drop-shadow(0 0 6px rgba(224,64,251,0.6))' }
                     : {}}
                 />
                 <div className="inv-name" title={name}>{name}</div>
+                {/* 타입 뱃지 */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 3, marginBottom: 2 }}>
+                  {(POKEMON_TYPES[pokemon.pokemonId] || ['normal']).map(t => {
+                    const meta = TYPE_META[t] || TYPE_META.normal;
+                    return (
+                      <span key={t} style={{
+                        background: meta.color, color: '#fff',
+                        fontSize: '0.48rem', fontWeight: 800,
+                        padding: '1px 5px', borderRadius: 10,
+                        textShadow: '0 1px 2px rgba(0,0,0,0.4)',
+                      }}>{meta.label}</span>
+                    );
+                  })}
+                </div>
                 <div className="inv-rarity" style={{ color: getRarityColor(pokemon.rarity) }}>
                   {'★'.repeat(pokemon.rarity)}
                 </div>

@@ -103,3 +103,19 @@ export async function fetchBattlePlayers(myAccountId) {
     .neq('id', myAccountId);
   return data || [];
 }
+
+export async function fetchRankData() {
+  // accounts와 game_saves 각각 fetch 후 클라이언트에서 합산
+  const [{ data: accounts }, { data: saves }] = await Promise.all([
+    supabase.from('accounts').select('id, nickname, battle_pokemon').not('battle_pokemon', 'is', null),
+    supabase.from('game_saves').select('account_id, game_state'),
+  ]);
+
+  const saveMap = {};
+  (saves || []).forEach(s => { saveMap[s.account_id] = s.game_state; });
+
+  return (accounts || []).map(a => ({
+    ...a,
+    game_state: saveMap[a.id] || {},
+  }));
+}

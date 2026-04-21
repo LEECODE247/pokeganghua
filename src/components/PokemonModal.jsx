@@ -4,6 +4,7 @@ import {
   getPokemonImageUrl, getPokemonName, getRarityStars, getRarityColor,
   calculatePower, calculateSellPrice, formatCoins,
 } from '../utils/gameUtils.js';
+import { POKEMON_TYPES, TYPE_META } from '../data/pokemonData.js';
 
 export default function PokemonModal({ pokemon, onClose }) {
   const { dispatch } = useGame();
@@ -53,6 +54,26 @@ export default function PokemonModal({ pokemon, onClose }) {
             </div>
           )}
         </div>
+
+        {/* 타입 뱃지 */}
+        {(() => {
+          const types = POKEMON_TYPES[pokemon.pokemonId] || ['normal'];
+          return (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 8 }}>
+              {types.map(t => {
+                const meta = TYPE_META[t] || TYPE_META.normal;
+                return (
+                  <span key={t} style={{
+                    background: meta.color, color: '#fff',
+                    fontSize: '0.7rem', fontWeight: 800,
+                    padding: '3px 10px', borderRadius: 20,
+                    letterSpacing: 0.5, textShadow: '0 1px 2px rgba(0,0,0,0.4)',
+                  }}>{meta.label}</span>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {/* 메타 정보 */}
         <div className="flex gap-8 items-center" style={{ justifyContent: 'center', flexWrap: 'wrap' }}>

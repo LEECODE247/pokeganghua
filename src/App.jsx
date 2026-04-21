@@ -1,6 +1,6 @@
-import React, { useReducer, useEffect, useState, useRef, createContext, useContext } from 'react';
+import React, { useReducer, useEffect, useState, useRef, createContext, useContext, Component } from 'react';
 import { generateWildPokemon, calculateSellPrice, getEnhanceRate, getEnhanceFailEffect, getEnhanceCost, createPokemonInstance } from './utils/gameUtils.js';
-import { BALL_CONFIG, POKEMON_NAMES, ALL_POKEMON_BY_RARITY, GEN1_IDS, GEN2_IDS, POKEMON_RARITY_MAP } from './data/pokemonData.js';
+import { BALL_CONFIG, POKEMON_NAMES, ALL_POKEMON_BY_RARITY, GEN1_IDS, GEN2_IDS, POKEMON_RARITY_MAP, GYM_CONFIG } from './data/pokemonData.js';
 import { EVOLUTIONS } from './data/evolutionData.js';
 import { loadGameState, saveGameState } from './supabase.js';
 import HUD from './components/HUD.jsx';
@@ -27,11 +27,13 @@ const INITIAL_STATE = {
   enhancingPokemonId: null,
   enhanceResult: null,
   enhanceFailStack: 0,
-  battlePokemonId: null,
+  battleTeam: [null, null, null], // [instanceId|null, instanceId|null, instanceId|null]
+  gymTeam: [null, null, null],   // 체육관 전용 팀 (미사용, 하위호환)
   gymMap: 'forest',
   gymSelectedPokemonId: null,
   gymBattleResult: null,
-  gymCooldowns: {},
+  gymCooldowns: {},              // { [gymMapId]: cooldownEndTimestamp }
+  gymPokemonCooldowns: {},       // { [instanceId]: cooldownEndTimestamp } — 포켓몬별 일일 1회 제한
   totalCaptured: 0,
   totalEnhanced: 0,
   totalBattles: 0,
@@ -41,8 +43,10 @@ const INITIAL_STATE = {
   battleResetDate: '',
   pokedex: [],
   pokedexRewarded: false,   // legacy (하위호환)
-  pokedex1Rewarded: false,  // 1세대 완성 보상
-  pokedex2Rewarded: false,  // 2세대 완성 보상
+  pokedex1HalfRewarded: false, // 1세대 80마리 보상
+  pokedex1Rewarded: false,     // 1세대 완성 보상
+  pokedex2HalfRewarded: false, // 2세대 50마리 보상
+  pokedex2Rewarded: false,     // 2세대 완성 보상
   lastEvolution: null,      // { from, to } — 마지막 진화 정보
 };
 
@@ -74,6 +78,8 @@ function gameReducer(state, action) {
       const baseRate  = ballCfg.rates[state.wildPokemon.rarity] ?? 0;
       const catchRate = arceusBlock
         ? 0
+        : isMythical
+        ? baseRate  // 아르세우스: fail streak 보너스 없음, 항상 고정 10%
         : Math.min(1, baseRate + state.captureFailStreak * 0.01);
       const roll      = Math.random();
       const result    = arceusBlock ? 'fail'
@@ -148,9 +154,10 @@ function gameReducer(state, action) {
         newFailStack++;
         const failEffect = getEnhanceFailEffect(pokemon.enhanceLevel);
         if (failEffect === 'destroy') {
-          if (action.useShield && state.fragments >= 1000) {
+          const shieldCost = (pokemon.enhanceLevel - 14) * 1000; // 15강→1000, 16강→2000, ...
+          if (action.useShield && state.fragments >= shieldCost) {
             result = 'shielded';
-            newFragments -= 1000;
+            newFragments -= shieldCost;
           } else {
             result = 'destroyed';
             newInventory = newInventory.filter(p => p.instanceId !== pokemon.instanceId);
@@ -189,8 +196,17 @@ function gameReducer(state, action) {
     case 'CLEAR_ENHANCE_RESULT':
       return { ...state, enhanceResult: null, lastEvolution: null };
 
-    case 'REGISTER_BATTLE_POKEMON':
-      return { ...state, battlePokemonId: action.pokemonId };
+    case 'SET_BATTLE_SLOT': {
+      const newTeam = [...state.battleTeam];
+      newTeam[action.slot] = action.pokemonId; // null이면 슬롯 해제
+      return { ...state, battleTeam: newTeam };
+    }
+
+    case 'SET_GYM_SLOT': {
+      const newTeam = [...state.gymTeam];
+      newTeam[action.slot] = action.pokemonId;
+      return { ...state, gymTeam: newTeam };
+    }
 
     case 'BATTLE_WIN': {
       const today = new Date().toDateString();
@@ -219,13 +235,17 @@ function gameReducer(state, action) {
     case 'SELL_POKEMON': {
       const pokemon = state.inventory.find(p => p.instanceId === action.pokemonId);
       if (!pokemon) return state;
+      const newGymPokemonCooldowns = { ...state.gymPokemonCooldowns };
+      delete newGymPokemonCooldowns[action.pokemonId];
       return {
         ...state,
         coins: state.coins + calculateSellPrice(pokemon),
         inventory: state.inventory.filter(p => p.instanceId !== action.pokemonId),
         enhancingPokemonId:   state.enhancingPokemonId   === action.pokemonId ? null : state.enhancingPokemonId,
         gymSelectedPokemonId: state.gymSelectedPokemonId === action.pokemonId ? null : state.gymSelectedPokemonId,
-        battlePokemonId:      state.battlePokemonId      === action.pokemonId ? null : state.battlePokemonId,
+        battleTeam: state.battleTeam.map(id => id === action.pokemonId ? null : id),
+        gymTeam: state.gymTeam.map(id => id === action.pokemonId ? null : id),
+        gymPokemonCooldowns: newGymPokemonCooldowns,
       };
     }
 
@@ -234,32 +254,42 @@ function gameReducer(state, action) {
       const totalCoins = state.inventory
         .filter(p => idSet.has(p.instanceId))
         .reduce((sum, p) => sum + calculateSellPrice(p), 0);
+      const newGymPokemonCooldowns2 = Object.fromEntries(
+        Object.entries(state.gymPokemonCooldowns).filter(([k]) => !idSet.has(k))
+      );
       return {
         ...state,
         coins: state.coins + totalCoins,
         inventory: state.inventory.filter(p => !idSet.has(p.instanceId)),
         enhancingPokemonId:   idSet.has(state.enhancingPokemonId)   ? null : state.enhancingPokemonId,
         gymSelectedPokemonId: idSet.has(state.gymSelectedPokemonId) ? null : state.gymSelectedPokemonId,
-        battlePokemonId:      idSet.has(state.battlePokemonId)      ? null : state.battlePokemonId,
+        battleTeam: state.battleTeam.map(id => idSet.has(id) ? null : id),
+        gymTeam: state.gymTeam.map(id => idSet.has(id) ? null : id),
+        gymPokemonCooldowns: newGymPokemonCooldowns2,
       };
     }
 
     case 'SET_GYM_MAP':
-      return { ...state, gymMap: action.mapId, gymBattleResult: null };
+      return { ...state, gymMap: action.mapId };
 
     case 'SELECT_GYM_POKEMON':
-      return { ...state, gymSelectedPokemonId: action.pokemonId, gymBattleResult: null };
+      return { ...state, gymSelectedPokemonId: action.pokemonId };
 
     case 'GYM_BATTLE_RESOLVE': {
-      const { playerPower, gymPower, gymReward } = action;
-      const winChance = Math.min(0.95, Math.max(0.25, (playerPower / gymPower) * 0.55));
-      const won       = Math.random() < winChance;
-      const reward    = won ? gymReward : Math.floor(gymReward * 0.05);
+      const { won, coinReward } = action;
+      const gymCfg = GYM_CONFIG[state.gymMap];
+      // 포켓몬 일일 쿨다운: 오늘 자정까지
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
       return {
         ...state,
-        coins: state.coins + reward,
-        gymBattleResult: { won, reward, winChance: Math.round(winChance * 100) },
-        gymCooldowns: { ...state.gymCooldowns, [state.gymSelectedPokemonId]: Date.now() + 3600000 },
+        coins: state.coins + coinReward,
+        gymCooldowns: { ...state.gymCooldowns, [state.gymMap]: Date.now() + gymCfg.cooldown },
+        gymPokemonCooldowns: {
+          ...state.gymPokemonCooldowns,
+          [state.gymSelectedPokemonId]: tomorrow.getTime(),
+        },
         totalBattles: state.totalBattles + 1,
         totalWins: won ? state.totalWins + 1 : state.totalWins,
       };
@@ -278,8 +308,17 @@ function gameReducer(state, action) {
       return { ...state, fragments: state.fragments + 10000, pokedexRewarded: true };
     }
 
+    case 'CLAIM_POKEDEX1_HALF_REWARD': {
+      // 1세대 80마리 → 💎 파편 5,000개
+      if (state.pokedex1HalfRewarded) return state;
+      const caught1h = new Set(state.pokedex);
+      const gen1HalfCount = GEN1_IDS.filter(id => caught1h.has(id)).length;
+      if (gen1HalfCount < 80) return state;
+      return { ...state, fragments: state.fragments + 5000, pokedex1HalfRewarded: true };
+    }
+
     case 'CLAIM_POKEDEX1_REWARD': {
-      // 1세대 완성 → 💎 파편 10,000개
+      // 1세대 완성(151마리) → 💎 파편 10,000개
       if (state.pokedex1Rewarded) return state;
       const caught1 = new Set(state.pokedex);
       const gen1Complete = GEN1_IDS.every(id => caught1.has(id));
@@ -287,8 +326,29 @@ function gameReducer(state, action) {
       return { ...state, fragments: state.fragments + 10000, pokedex1Rewarded: true };
     }
 
+    case 'CLAIM_POKEDEX2_HALF_REWARD': {
+      // 2세대 50마리 → 랜덤 18강 ★3 포켓몬
+      if (state.pokedex2HalfRewarded) return state;
+      const caught2h = new Set(state.pokedex);
+      const gen2HalfCount = GEN2_IDS.filter(id => caught2h.has(id)).length;
+      if (gen2HalfCount < 50) return state;
+      const rarity3Pool = ALL_POKEMON_BY_RARITY[3];
+      const rewardId2h = rarity3Pool[Math.floor(Math.random() * rarity3Pool.length)];
+      const rewardPokemon2h = {
+        ...createPokemonInstance(rewardId2h, 3),
+        sizeGrade: 'S',
+        enhanceLevel: 18,
+      };
+      return {
+        ...state,
+        inventory: [...state.inventory, rewardPokemon2h],
+        pokedex: caught2h.has(rewardId2h) ? state.pokedex : [...state.pokedex, rewardId2h],
+        pokedex2HalfRewarded: true,
+      };
+    }
+
     case 'CLAIM_POKEDEX2_REWARD': {
-      // 2세대 완성 → 랜덤 15강 S급 ★4 포켓몬
+      // 2세대 완성(100마리) → 랜덤 15강 S급 ★4 포켓몬
       if (state.pokedex2Rewarded) return state;
       const caught2 = new Set(state.pokedex);
       const gen2Complete = GEN2_IDS.every(id => caught2.has(id));
@@ -378,13 +438,15 @@ export default function App() {
   if (phase === 'login')   return <LoginScreen onLogin={handleLogin} />;
 
   return (
-    <GameApp
-      key={session.accountId}
-      accountId={session.accountId}
-      nickname={session.nickname}
-      initialState={session.initialState}
-      onLogout={handleLogout}
-    />
+    <ErrorBoundary>
+      <GameApp
+        key={session.accountId}
+        accountId={session.accountId}
+        nickname={session.nickname}
+        initialState={session.initialState}
+        onLogout={handleLogout}
+      />
+    </ErrorBoundary>
   );
 }
 
@@ -393,13 +455,26 @@ function GameApp({ accountId, nickname, initialState, onLogout }) {
   const merged = { ...INITIAL_STATE, ...(initialState || {}) };
   const safeState = {
     ...merged,
+    coins:     typeof merged.coins     === 'number' ? merged.coins     : INITIAL_STATE.coins,
+    fragments: typeof merged.fragments === 'number' ? merged.fragments : INITIAL_STATE.fragments,
     // 포획 화면은 세션 복원 시 항상 메인으로 리셋 (wildPokemon 무한 포획 버그 방지)
     screen: merged.screen === 'capture' ? 'main' : (VALID_SCREENS.has(merged.screen) ? merged.screen : 'main'),
     wildPokemon: null,
     captureResult: null,
     captureFailStreak: 0,
     // 구버전 pokedexRewarded → pokedex1Rewarded 마이그레이션
+    pokedex1HalfRewarded: merged.pokedex1HalfRewarded || false,
     pokedex1Rewarded: merged.pokedex1Rewarded || merged.pokedexRewarded || false,
+    pokedex2HalfRewarded: merged.pokedex2HalfRewarded || false,
+    // 구버전 battlePokemonId → battleTeam 마이그레이션
+    battleTeam: Array.isArray(merged.battleTeam) ? merged.battleTeam : [null, null, null],
+    // gymTeam 마이그레이션
+    gymTeam: Array.isArray(merged.gymTeam) ? merged.gymTeam : [null, null, null],
+    // gymCooldowns: 구버전(instanceId 기반) → 신버전(gymMap 기반) 마이그레이션
+    gymCooldowns: Object.keys(merged.gymCooldowns || {}).some(k => !GYM_CONFIG[k])
+      ? {}
+      : (merged.gymCooldowns || {}),
+    gymPokemonCooldowns: merged.gymPokemonCooldowns || {},
   };
 
   const [state, dispatch] = useReducer(gameReducer, safeState);
@@ -464,4 +539,27 @@ function LoadingScreen() {
       </div>
     </div>
   );
+}
+
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(e) { return { error: e }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 24, color: '#ef5350', background: '#0a0010', minHeight: '100vh' }}>
+          <div style={{ fontSize: '1.2rem', fontWeight: 900, marginBottom: 12 }}>⚠️ 렌더링 오류</div>
+          <pre style={{ fontSize: '0.75rem', whiteSpace: 'pre-wrap', color: '#ff8a80' }}>
+            {this.state.error.message}
+            {'\n\n'}
+            {this.state.error.stack}
+          </pre>
+          <button onClick={() => this.setState({ error: null })} style={{ marginTop: 16, padding: '8px 16px', borderRadius: 8, background: '#6366f1', color: '#fff', border: 'none', cursor: 'pointer' }}>
+            재시도
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }

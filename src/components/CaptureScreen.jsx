@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useGame } from '../App.jsx';
-import { BALL_CONFIG } from '../data/pokemonData.js';
+import { BALL_CONFIG, POKEMON_TYPES, TYPE_META } from '../data/pokemonData.js';
 import {
   getPokemonImageUrl, getPokemonName,
   getRarityStars, getRarityColor, formatCoins, calculateSellPrice,
@@ -193,6 +193,22 @@ export default function CaptureScreen() {
 
             <div className="pokemon-name" style={{ color: rarityColor }}>
               {getPokemonName(wildPokemon.pokemonId)}
+            </div>
+
+            {/* 타입 뱃지 */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 4, marginBottom: 4 }}>
+              {(POKEMON_TYPES[wildPokemon.pokemonId] || ['normal']).map(t => {
+                const meta = TYPE_META[t] || TYPE_META.normal;
+                return (
+                  <span key={t} style={{
+                    background: meta.color, color: '#fff',
+                    fontSize: '0.62rem', fontWeight: 800,
+                    padding: '2px 8px', borderRadius: 10,
+                    textShadow: '0 1px 3px rgba(0,0,0,0.4)',
+                    letterSpacing: '0.03em',
+                  }}>{meta.label}</span>
+                );
+              })}
             </div>
 
             <div className="pokemon-meta">

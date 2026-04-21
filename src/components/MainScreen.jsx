@@ -5,162 +5,28 @@ import { formatCoins } from '../utils/gameUtils.js';
 // ── 업데이트 공지 데이터 ──────────────────────────────────────────────────────
 const UPDATES = [
   {
-    id: 3,
-    date: '2026.04.16',
-    title: '3차 업데이트',
-    badge: 'NEW',
-    summary: '2세대 확장 · 진화 시스템 · 신화 등급',
-    details: [
-      {
-        section: '🌏 2세대 포켓몬 추가',
-        items: [
-          '치코리타·브케인·리아코 등 금/은 버전 포켓몬 100마리 추가',
-          '총 출현 풀 161마리 → 251마리 이상으로 확장',
-          '2세대 포켓몬 한국어 이름 27종 정식 명칭으로 수정',
-          '1세대·2세대 도감 완성 보상 신설',
-          '- 1세대 완성: 💎 파편 10,000개',
-          '- 2세대 완성: 랜덤 ★4 S급 +15강 포켓몬',
-        ],
-      },
-      {
-        section: '🌟 진화 시스템 추가',
-        items: [
-          '강화 특정 레벨 도달 시 포켓몬이 진화',
-          '3단계 진화: +10 → +15 (예: 이상해씨 → 이상해풀 → 이상해꽃)',
-          '2단계 진화: +13 (예: 피카츄 → 라이츄, 잉어킹 → 갸라도스)',
-          '베이비 포켓몬: +10 (예: 피츄 → 피카츄)',
-          '이브이: +13에 에스피·블래키 등 5종 중 랜덤 진화',
-          '배루키: +13에 시라소몬·홍수몬·히토몬탑 중 랜덤',
-          '진화 연출: 실루엣 → 화이트 플래시 → 등장 풀스크린 애니메이션',
-        ],
-      },
-      {
-        section: '🔶 ★5 신화 등급 — 아르세우스',
-        items: [
-          '출현 확률 0.5% (마스터볼로만 포획 가능, 포획률 10%)',
-          '기준 전투력 40,000 — 전설의 3배 이상',
-          '포획 화면에 주황색 글로우 + 🌟 신화! 배지 표시',
-        ],
-      },
-      {
-        section: '🏟️ 엔드게임 체육관 4개 추가',
-        items: [
-          '기존 4개 → 총 8개 체육관으로 확장',
-          '체육관 탭 레이아웃 2행 × 4열 그리드로 변경',
-          '🧊 빙산 체육관 — 전투력 80,000+ / 보상 🪙200,000 (엘리트)',
-          '⚡ 폭풍 체육관 — 전투력 400,000+ / 보상 🪙1,000,000 (초고난이도)',
-          '🌑 심연 체육관 — 전투력 2,500,000+ / 보상 🪙4,500,000 (레전드)',
-          '✨ 신화 체육관 — 전투력 3,500,000+ / 보상 🪙12,000,000 (극악 난이도)',
-          '- 승률: 350만 기준 5%에서 시작, 50만 오를 때마다 +5% 상승',
-          '- 아르세우스 S+20강(약 1,170만) 도달 시 최대 85%',
-        ],
-      },
-      {
-        section: '⚔️ 배틀 애니메이션 개편',
-        items: [
-          '레이아웃 변경: 상대(위) / 나(아래) 본가 스타일',
-          '8개 체육관 모두 타입별 배경·기술 개별 적용',
-          '- 숲=초록/잎날가르기, 강=파랑/물대포, 동굴=갈색/지진, 하늘=빨강/불꽃방사',
-          '- 빙산=하늘색/눈보라, 폭풍=노랑/번개, 심연=보라/사이코키, 신화=주황/하이퍼빔',
-          '플레이어 배틀(PvP)에도 동일 7단계 애니메이션 적용',
-          '차지업 글로우 → 돌진 → 타입별 에너지 탄환 → 피격 플래시',
-          '7단계 배틀 시퀀스 (이전 4단계 → 7단계로 확장)',
-        ],
-      },
-      {
-        section: '⚡ 전투력 시스템 개선',
-        items: [
-          '포켓몬별 실제 종족값(BST) 기반 개별 전투력 적용',
-          '예: 잉어킹(80) → 갸라도스 진화 시 3,500으로 급등',
-          '예: 뮤츠(22,000) vs 라이코(12,500) 전설 내 차등화',
-          '+15강 이상 성공 시 전투력 2배 공식 유지',
-        ],
-      },
-      {
-        section: '🎨 UI 전면 개편',
-        items: [
-          '어두운 보라·네이비 → 포켓몬 스타일 로얄 블루/레드/골드 테마로 전환',
-          'HUD 상단 포켓몬 레드(#CC1111) 라인 + 레드 글로우 그림자',
-          '활성 탭·버튼: 포켓몬 레드 그라디언트 적용',
-          '타이틀 "PokéGacha" 레드→골드 시머링 애니메이션',
-          '전설 포켓몬 글로우 레드+블루 이중 색상으로 변경',
-          '루렛(여행) 버튼 레드/골드 그라디언트로 변경',
-        ],
-      },
-    ],
-  },
-  {
-    id: 2,
-    date: '2026.04.10',
-    title: '2차 업데이트',
-    badge: null,
-    summary: '도감 시스템 · 포획 연출 · 볼 이미지',
-    details: [
-      {
-        section: '📖 포켓몬 도감',
-        items: [
-          '새 탭 "도감" 추가 — 포획한 포켓몬 기록',
-          '도감 완성 시 💎 파편 10,000개 보상',
-          '희귀도별 분류 및 전체 진행률 표시',
-        ],
-      },
-      {
-        section: '🎯 포획 연출 개선',
-        items: [
-          '볼 던진 후 3...2...1... GOTCHA! / 탈출! 카운트다운 오버레이',
-          '포획 버튼에 실제 볼 스프라이트 이미지 적용',
-        ],
-      },
-      {
-        section: '⚔️ 배틀 애니메이션 (초기)',
-        items: [
-          '체육관 배틀 시 3라운드 HP바 애니메이션 추가',
-          '체육관별 대표 포켓몬 등장 (이상해꽃·거북왕·딱구리·리자몽)',
-          '승패 연출 후 결과 표시',
-        ],
-      },
-      {
-        section: '🔧 밸런스 조정',
-        items: [
-          '포획 실패 연속 보너스 5% → 1% 하향',
-          '★1 출현율 수정 (52%), ★3 16%, ★4 2% 명확화',
-          '매시간 코인 10,000 수령 버튼 추가',
-        ],
-      },
-    ],
-  },
-  {
     id: 1,
-    date: '2026.04.10',
-    title: '1차 업데이트',
-    badge: null,
-    summary: '게임 출시 — 기본 시스템 전체',
+    date: '2026.04.20',
+    title: '🎉 정식 버전 출시',
+    badge: 'NEW',
+    summary: '클로즈베타 종료 · 정식 서비스 시작',
     details: [
       {
-        section: '🎮 기본 시스템',
+        section: '💌 클로즈베타에 참여해주신 분들께',
         items: [
-          '1세대 포켓몬 161마리 수록',
-          '여행 → 야생 포켓몬 출현 → 볼로 포획',
-          '볼 4종: 몬스터볼·슈퍼볼·하이퍼볼·마스터볼',
-          '황금 포켓몬 0.5% 확률 등장 (판매가 5배)',
+          '긴 시간 동안 함께해주셔서 진심으로 감사합니다.',
+          '여러분의 피드백과 관심 덕분에 더 좋은 게임으로 성장할 수 있었습니다.',
+          '버그를 발견하고, 불편함을 알려주시고, 묵묵히 함께해주신 모든 분들께 깊이 감사드립니다.',
+          '클로즈베타가 있었기에 오늘의 정식 출시가 있을 수 있었습니다. 정말 감사했습니다. 🙏',
         ],
       },
       {
-        section: '⚗️ 강화 시스템',
+        section: '🚀 이제, 정식으로 시작합니다',
         items: [
-          '+0 ~ +20 강화 (최대 20레벨)',
-          '+15부터 성공 시 전투력 2배, 실패 시 파괴',
-          '실패 스택으로 성공률 보너스 누적',
-          '💎 파편 1000개로 파괴 방어 가능',
-        ],
-      },
-      {
-        section: '🏟️ 체육관 시스템',
-        items: [
-          '4개 체육관 (숲·강·동굴·하늘)',
-          '전투력 조건 충족 시 도전 가능',
-          '승리 보상 코인 획득, 1시간 쿨다운',
-          '포켓몬 매각으로 코인 수급',
+          '오늘부터 포켓가챠가 정식 서비스를 시작합니다.',
+          '1·2세대 포켓몬 251마리, 8개 체육관, 진화 시스템, PvP 배틀까지 —',
+          '모든 콘텐츠가 준비되어 있습니다.',
+          '자, 이제 다 같이 여행을 떠나봅시다! 🌍',
         ],
       },
     ],
@@ -217,36 +83,10 @@ export default function MainScreen() {
   const { state, dispatch } = useGame();
   const [selectedUpdate, setSelectedUpdate] = useState(null);
 
-  const winRate = state.totalBattles > 0
-    ? Math.round((state.totalWins / state.totalBattles) * 100)
-    : 0;
-
   return (
     <div>
       <div className="main-title">PokéGacha</div>
-      <p className="main-subtitle">포획 · 강화 · 정복</p>
-
-      {/* 통계 */}
-      <div className="card mb-12">
-        <div className="stats-bar">
-          <div className="stat-pill">
-            <div className="stat-pill-val">{state.totalCaptured}</div>
-            <div className="stat-pill-label">포획</div>
-          </div>
-          <div className="stat-pill">
-            <div className="stat-pill-val">{state.inventory.length}</div>
-            <div className="stat-pill-label">보유</div>
-          </div>
-          <div className="stat-pill">
-            <div className="stat-pill-val">{state.totalEnhanced}</div>
-            <div className="stat-pill-label">강화</div>
-          </div>
-          <div className="stat-pill">
-            <div className="stat-pill-val">{winRate}%</div>
-            <div className="stat-pill-label">승률</div>
-          </div>
-        </div>
-      </div>
+      <p className="main-subtitle">포획 · 진화 · 배틀</p>
 
       {/* 여행하기 버튼 */}
       <div className="roulette-section">
@@ -314,7 +154,7 @@ export default function MainScreen() {
       )}
 
       {/* 팁 */}
-      <div className="card">
+      <div className="card" style={{ marginBottom: 0 }}>
         <div className="section-title">팁</div>
         <div style={{ fontSize: '0.8rem', color: 'var(--text2)', lineHeight: 1.8 }}>
           🌍 여행으로 1·2세대 포켓몬 랜덤 출현<br/>
@@ -324,6 +164,15 @@ export default function MainScreen() {
           🏟️ 체육관에서 대규모 코인 획득<br/>
           ✨ 황금 포켓몬은 0.5% 확률 — 판매가 5배!
         </div>
+      </div>
+
+      {/* 개발자 크레딧 */}
+      <div style={{
+        textAlign: 'center', marginTop: 20, paddingBottom: 8,
+        fontSize: '0.68rem', color: 'rgba(255,255,255,0.18)',
+        letterSpacing: 1,
+      }}>
+        developed by <span style={{ color: 'rgba(255,255,255,0.32)', fontWeight: 700 }}>jito's husband</span>
       </div>
     </div>
   );

@@ -70,7 +70,8 @@ export default function HelpModal({ onClose }) {
           <Row style={{ marginTop: 4 }}>강화 실패가 쌓일수록 다음 시도 성공률이 <b>5%씩</b> 보너스됩니다.</Row>
           <Row><b style={{ color: '#e040fb' }}>+15 이상</b>부터 강화 성공 시 전투력이 <b>2배씩</b> 폭발적으로 상승!</Row>
           <Row>
-            🛡️ <b>파괴 방지</b> — +15 이상 강화 시 <b style={{ color: '#FFD700' }}>💎 파편 1000개</b>를 소모해 파괴를 막을 수 있습니다.<br />
+            🛡️ <b>파괴 방지</b> — +15 이상 강화 시 💎 파편을 소모해 파괴를 막을 수 있습니다.<br />
+            방지 비용: <b style={{ color: '#FFD700' }}>+15 💎1,000 · +16 💎2,000 · +17 💎3,000 · +18 💎4,000 · +19 💎5,000</b><br />
             방지 적용 시 강화 실패해도 포켓몬은 현재 레벨을 유지합니다.
           </Row>
         </Section>
@@ -93,7 +94,7 @@ export default function HelpModal({ onClose }) {
           <Row>포켓몬을 선택해 체육관에 도전하면 코인을 획득합니다.</Row>
           <Row>체육관마다 <b>최소 전투력 요건</b>이 있습니다.</Row>
           <Row>전투력이 높을수록 승리 확률이 올라가며, 패배해도 소액 위로금을 받습니다.</Row>
-          <Row>도전 후 해당 포켓몬은 <b>1시간 쿨다운</b>이 적용됩니다.</Row>
+          <Row>도전 후 <b>각 체육관마다 1시간 쿨다운</b>이 적용됩니다. (포켓몬 기준이 아닌 체육관 기준)</Row>
           <Row>
             <b style={{ color: '#FF6B00' }}>✨ 신화 체육관</b> — 전투력 350만 기준 <b>5%</b>에서 시작,
             50만 오를 때마다 <b>+5%</b>씩 상승합니다.
@@ -173,22 +174,43 @@ function RarityTable() {
 
 function BallTable() {
   const balls = [
-    { name: '몬스터볼', icon: '⚽', cost: '🪙100',     desc: '★1: 70% · ★2: 20% · ★3: 5% · ★4: 0.3% · ★5: 불가' },
-    { name: '슈퍼볼',   icon: '🔵', cost: '🪙3,000',   desc: '★1 확정 · ★2: 60% · ★3: 12% · ★4: 1.5% · ★5: 불가' },
-    { name: '하이퍼볼', icon: '🟡', cost: '🪙20,000',  desc: '★1·2 확정 · ★3: 40% · ★4: 5% · ★5: 불가' },
-    { name: '마스터볼', icon: '🟣', cost: '🪙100,000', desc: '★1·2·3 확정 · ★4: 15% · ★5 아르세우스: 10%' },
+    {
+      name: '몬스터볼', cost: '🪙100', color: '#ef5350',
+      img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png',
+      desc: '★1: 70% · ★2: 20% · ★3: 5% · ★4: 0.3% · ★5: 불가',
+    },
+    {
+      name: '슈퍼볼', cost: '🪙3,000', color: '#42a5f5',
+      img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png',
+      desc: '★1 확정 · ★2: 60% · ★3: 12% · ★4: 1.5% · ★5: 불가',
+    },
+    {
+      name: '하이퍼볼', cost: '🪙20,000', color: '#ffd600',
+      img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png',
+      desc: '★1·2 확정 · ★3: 40% · ★4: 5% · ★5: 불가',
+    },
+    {
+      name: '마스터볼', cost: '🪙100,000', color: '#ce93d8',
+      img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png',
+      desc: '★1·2·3 확정 · ★4: 15% · ★5 아르세우스: 10%',
+    },
   ];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       {balls.map(b => (
         <div key={b.name} style={{
           background: 'var(--bg)', borderRadius: 6, padding: '6px 10px',
-          borderLeft: '2px solid var(--border)',
+          borderLeft: `2px solid ${b.color}`,
+          display: 'flex', alignItems: 'center', gap: 10,
         }}>
-          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text)' }}>
-            {b.icon} {b.name} <span style={{ color: 'var(--primary)', fontWeight: 400 }}>{b.cost}</span>
+          <img src={b.img} alt={b.name}
+            style={{ width: 32, height: 32, imageRendering: 'pixelated', flexShrink: 0 }} />
+          <div>
+            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: b.color }}>
+              {b.name} <span style={{ color: 'var(--text)', fontWeight: 400 }}>{b.cost}</span>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text2)', marginTop: 1 }}>{b.desc}</div>
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text2)', marginTop: 1 }}>{b.desc}</div>
         </div>
       ))}
     </div>
@@ -236,24 +258,35 @@ function RewardTable() {
 
 function EnhanceTable() {
   const rows = [
-    { range: '+0 ~ +4',   rate: '100%',   fail: '없음',              cost: '🪙500' },
-    { range: '+5 ~ +7',   rate: '90%',    fail: '변화 없음',         cost: '🪙2,000' },
-    { range: '+8 ~ +10',  rate: '75%',    fail: '변화 없음',         cost: '🪙6,000' },
-    { range: '+11 ~ +12', rate: '55%',    fail: '레벨 -1',           cost: '🪙20,000' },
-    { range: '+13 ~ +14', rate: '40%',    fail: '레벨 -1',           cost: '🪙40,000' },
-    { range: '+15 ~ +19', rate: '15~35%', fail: '포켓몬 파괴 (💎1000 방지)', cost: '🪙70,000+' },
+    { range: '+0 ~ +4',   rate: '100%', fail: '없음',     cost: '🪙500',     shield: null,    destroy: false },
+    { range: '+5 ~ +7',   rate: '90%',  fail: '변화 없음', cost: '🪙2,000',   shield: null,    destroy: false },
+    { range: '+8 ~ +10',  rate: '75%',  fail: '변화 없음', cost: '🪙6,000',   shield: null,    destroy: false },
+    { range: '+11 ~ +12', rate: '55%',  fail: '레벨 -1',  cost: '🪙20,000',  shield: null,    destroy: false },
+    { range: '+13 ~ +14', rate: '40%',  fail: '레벨 -1',  cost: '🪙40,000',  shield: null,    destroy: false },
+    { range: '+15',       rate: '35%',  fail: '파괴',      cost: '🪙70,000',  shield: '💎1,000 방지', destroy: true },
+    { range: '+16',       rate: '30%',  fail: '파괴',      cost: '🪙90,000',  shield: '💎2,000 방지', destroy: true },
+    { range: '+17',       rate: '25%',  fail: '파괴',      cost: '🪙120,000', shield: '💎3,000 방지', destroy: true },
+    { range: '+18',       rate: '20%',  fail: '파괴',      cost: '🪙160,000', shield: '💎4,000 방지', destroy: true },
+    { range: '+19',       rate: '15%',  fail: '파괴',      cost: '🪙200,000', shield: '💎5,000 방지', destroy: true },
   ];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3, margin: '4px 0' }}>
       {rows.map(r => (
         <div key={r.range} style={{
           background: 'var(--bg)', borderRadius: 6, padding: '5px 10px',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          borderLeft: '2px solid var(--border)',
+          borderLeft: `2px solid ${r.destroy ? 'var(--fail)' : 'var(--border)'}`,
         }}>
-          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text)' }}>{r.range}</span>
-          <span style={{ fontSize: '0.75rem', color: 'var(--success)' }}>성공 {r.rate}</span>
-          <span style={{ fontSize: '0.72rem', color: r.fail.includes('파괴') ? 'var(--fail)' : 'var(--text2)' }}>실패: {r.fail}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: r.destroy ? '#ff8a80' : 'var(--text)' }}>{r.range}</span>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text2)' }}>{r.cost}</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--success)' }}>성공 {r.rate}</span>
+          </div>
+          {r.destroy && (
+            <div style={{ fontSize: '0.7rem', marginTop: 2, display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--fail)' }}>실패 → 포켓몬 파괴</span>
+              <span style={{ color: '#ffd700', fontWeight: 700 }}>🛡️ {r.shield}</span>
+            </div>
+          )}
         </div>
       ))}
     </div>
@@ -262,14 +295,14 @@ function EnhanceTable() {
 
 function GymTable() {
   const gyms = [
-    { name: '숲',   icon: '🌲', power: '500',        reward: '🪙1,000',      color: '#4caf50' },
-    { name: '강',   icon: '🌊', power: '2,500',      reward: '🪙4,000',      color: '#ff9800' },
-    { name: '동굴', icon: '⛰️', power: '12,000',     reward: '🪙16,000',     color: '#f44336' },
-    { name: '하늘', icon: '☁️', power: '50,000',     reward: '🪙70,000',     color: '#9c27b0' },
-    { name: '빙산', icon: '🧊', power: '80,000',     reward: '🪙200,000',    color: '#00bcd4' },
-    { name: '폭풍', icon: '⚡', power: '400,000',    reward: '🪙1,000,000',  color: '#ffd600' },
-    { name: '심연', icon: '🌑', power: '2,500,000',  reward: '🪙4,500,000',  color: '#e91e63' },
-    { name: '신화', icon: '✨', power: '3,500,000',  reward: '🪙12,000,000', color: '#FF6B00' },
+    { name: '숲',   icon: '🌲', power: '500',        reward: '🪙3,000',      color: '#4caf50' },
+    { name: '강',   icon: '🌊', power: '2,500',      reward: '🪙12,000',     color: '#ff9800' },
+    { name: '동굴', icon: '⛰️', power: '12,000',     reward: '🪙50,000',     color: '#f44336' },
+    { name: '하늘', icon: '☁️', power: '50,000',     reward: '🪙200,000',    color: '#9c27b0' },
+    { name: '빙산', icon: '🧊', power: '80,000',     reward: '🪙600,000',    color: '#00bcd4' },
+    { name: '폭풍', icon: '⚡', power: '400,000',    reward: '🪙3,000,000',  color: '#ffd600' },
+    { name: '심연', icon: '🌑', power: '2,500,000',  reward: '🪙13,000,000', color: '#e91e63' },
+    { name: '신화', icon: '✨', power: '3,500,000',  reward: '🪙35,000,000', color: '#FF6B00' },
   ];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 4 }}>

@@ -366,7 +366,8 @@ export const GYM_CONFIG = {
     difficultyColor: '#4caf50',
     requiredPower: 300,
     gymPower: 500,
-    reward: 1000,
+    reward: 3000,
+    cooldown: 3600000,  // 1시간
     map: 'forest',
   },
   river: {
@@ -376,7 +377,8 @@ export const GYM_CONFIG = {
     difficultyColor: '#ff9800',
     requiredPower: 1500,
     gymPower: 2500,
-    reward: 4000,
+    reward: 12000,
+    cooldown: 3600000,  // 1시간
     map: 'river',
   },
   cave: {
@@ -386,7 +388,8 @@ export const GYM_CONFIG = {
     difficultyColor: '#f44336',
     requiredPower: 6000,
     gymPower: 12000,
-    reward: 16000,
+    reward: 50000,
+    cooldown: 3600000,  // 1시간
     map: 'cave',
   },
   sky: {
@@ -396,7 +399,8 @@ export const GYM_CONFIG = {
     difficultyColor: '#9c27b0',
     requiredPower: 22000,
     gymPower: 50000,
-    reward: 70000,
+    reward: 200000,
+    cooldown: 3600000,  // 1시간
     map: 'sky',
   },
   glacier: {
@@ -406,7 +410,8 @@ export const GYM_CONFIG = {
     difficultyColor: '#00bcd4',
     requiredPower: 80000,
     gymPower: 250000,
-    reward: 200000,
+    reward: 600000,
+    cooldown: 3600000,  // 1시간
     map: 'glacier',
   },
   storm: {
@@ -416,7 +421,8 @@ export const GYM_CONFIG = {
     difficultyColor: '#ffd600',
     requiredPower: 400000,
     gymPower: 1200000,
-    reward: 1000000,
+    reward: 3000000,
+    cooldown: 3600000,  // 1시간
     map: 'storm',
   },
   abyss: {
@@ -426,7 +432,8 @@ export const GYM_CONFIG = {
     difficultyColor: '#e91e63',
     requiredPower: 2500000,
     gymPower: 6000000,
-    reward: 4500000,
+    reward: 13000000,
+    cooldown: 3600000,  // 1시간
     map: 'abyss',
   },
   myth: {
@@ -436,9 +443,22 @@ export const GYM_CONFIG = {
     difficultyColor: '#FF6B00',
     requiredPower: 3500000,
     gymPower: 50000000,
-    reward: 12000000,
+    reward: 35000000,
+    cooldown: 3600000,  // 1시간
     map: 'myth',
   },
+};
+
+// 체육관 관장 팀 (3마리) — ratio는 gymPower 대비 각 포켓몬의 전투력 비율
+export const GYM_LEADER_TEAMS = {
+  forest:  [{ id: 44,  ratio: 0.25 }, { id: 102, ratio: 0.33 }, { id: 3,   ratio: 0.42 }],
+  river:   [{ id: 54,  ratio: 0.25 }, { id: 86,  ratio: 0.33 }, { id: 9,   ratio: 0.42 }],
+  cave:    [{ id: 27,  ratio: 0.25 }, { id: 74,  ratio: 0.33 }, { id: 76,  ratio: 0.42 }],
+  sky:     [{ id: 4,   ratio: 0.25 }, { id: 16,  ratio: 0.33 }, { id: 6,   ratio: 0.42 }],
+  glacier: [{ id: 86,  ratio: 0.25 }, { id: 87,  ratio: 0.33 }, { id: 131, ratio: 0.42 }],
+  storm:   [{ id: 81,  ratio: 0.25 }, { id: 82,  ratio: 0.33 }, { id: 145, ratio: 0.42 }],
+  abyss:   [{ id: 92,  ratio: 0.25 }, { id: 93,  ratio: 0.33 }, { id: 249, ratio: 0.42 }],
+  myth:    [{ id: 150, ratio: 0.20 }, { id: 249, ratio: 0.35 }, { id: 493, ratio: 0.45 }],
 };
 
 export const BALL_CONFIG = {
@@ -502,3 +522,309 @@ export const ENHANCE_CONFIG = [
   { range: [18, 18], rate: 0.20, fail: 'destroy', cost: 160000 },
   { range: [19, 19], rate: 0.15, fail: 'destroy', cost: 200000 },
 ];
+
+// ── 포켓몬별 주 타입 (기술 결정용) ──────────────────────────────────────────
+export const POKEMON_TYPE = {
+  // 풀
+  1:'grass', 2:'grass', 3:'grass', 43:'grass', 44:'grass', 45:'grass',
+  69:'grass', 70:'grass', 71:'grass', 102:'grass', 103:'grass', 114:'grass',
+  152:'grass', 153:'grass', 154:'grass', 182:'grass',
+  187:'grass', 188:'grass', 189:'grass', 191:'grass', 192:'grass',
+
+  // 불꽃
+  4:'fire', 5:'fire', 6:'fire', 37:'fire', 38:'fire',
+  58:'fire', 59:'fire', 77:'fire', 78:'fire', 126:'fire', 136:'fire', 146:'fire',
+  155:'fire', 156:'fire', 157:'fire', 218:'fire', 219:'fire',
+  228:'fire', 229:'fire', 240:'fire', 244:'fire', 250:'fire',
+
+  // 물
+  7:'water', 8:'water', 9:'water', 54:'water', 55:'water',
+  60:'water', 61:'water', 62:'water', 72:'water', 73:'water',
+  79:'water', 80:'water', 86:'water', 90:'water', 98:'water', 99:'water',
+  116:'water', 117:'water', 118:'water', 119:'water', 120:'water', 121:'water',
+  129:'water', 130:'water', 131:'water', 134:'water',
+  158:'water', 159:'water', 160:'water', 183:'water', 184:'water',
+  186:'water', 194:'water', 195:'water', 199:'water',
+  211:'water', 222:'water', 223:'water', 224:'water', 226:'water', 245:'water',
+
+  // 전기
+  25:'electric', 26:'electric', 81:'electric', 82:'electric',
+  100:'electric', 101:'electric', 125:'electric', 135:'electric', 145:'electric',
+  170:'electric', 171:'electric', 172:'electric',
+  179:'electric', 180:'electric', 181:'electric', 239:'electric', 243:'electric',
+
+  // 얼음
+  87:'ice', 91:'ice', 124:'ice', 144:'ice',
+  220:'ice', 221:'ice', 225:'ice', 238:'ice',
+
+  // 사이킥
+  63:'psychic', 64:'psychic', 65:'psychic', 96:'psychic', 97:'psychic',
+  122:'psychic', 150:'psychic', 151:'psychic',
+  176:'psychic', 177:'psychic', 178:'psychic',
+  196:'psychic', 201:'psychic', 202:'psychic', 203:'psychic',
+  249:'psychic', 251:'psychic',
+
+  // 격투
+  56:'fighting', 57:'fighting', 66:'fighting', 67:'fighting', 68:'fighting',
+  106:'fighting', 107:'fighting', 214:'fighting', 236:'fighting', 237:'fighting',
+
+  // 독
+  23:'poison', 24:'poison', 29:'poison', 30:'poison', 31:'poison',
+  32:'poison', 33:'poison', 34:'poison', 41:'poison', 42:'poison',
+  48:'poison', 49:'poison', 88:'poison', 89:'poison',
+  109:'poison', 110:'poison', 169:'poison',
+
+  // 땅
+  27:'ground', 28:'ground', 50:'ground', 51:'ground',
+  104:'ground', 105:'ground', 111:'ground', 112:'ground',
+  185:'ground', 207:'ground', 231:'ground', 232:'ground',
+
+  // 바위
+  74:'rock', 75:'rock', 76:'rock', 95:'rock',
+  138:'rock', 139:'rock', 140:'rock', 141:'rock',
+  204:'rock', 213:'rock', 246:'rock', 247:'rock', 248:'rock',
+
+  // 비행
+  16:'flying', 17:'flying', 18:'flying', 21:'flying', 22:'flying',
+  83:'flying', 84:'flying', 85:'flying', 123:'flying', 142:'flying',
+  163:'flying', 164:'flying', 165:'flying', 166:'flying', 193:'flying',
+
+  // 유령
+  92:'ghost', 93:'ghost', 94:'ghost', 200:'ghost',
+
+  // 악
+  197:'dark', 198:'dark', 215:'dark',
+
+  // 드래곤
+  147:'dragon', 148:'dragon', 149:'dragon', 230:'dragon',
+
+  // 강철
+  205:'steel', 208:'steel', 212:'steel', 227:'steel',
+
+  // 벌레
+  10:'bug', 11:'bug', 12:'bug', 13:'bug', 14:'bug', 15:'bug',
+  46:'bug', 47:'bug', 127:'bug', 167:'bug', 168:'bug',
+
+  // 신화 (아르세우스)
+  493:'myth',
+  // 노말 — 나머지 전부 (19,20,35,36,39,40,52,53,83,108,113,115,128,132,133,137,143 등)
+};
+
+// ── 포켓몬별 공식 타입 (표시용, 이중 타입 지원) ─────────────────────────────
+export const POKEMON_TYPES = {
+  // ── 1세대 ──────────────────────────────────────────────
+  1:['grass','poison'],   2:['grass','poison'],   3:['grass','poison'],
+  4:['fire'],             5:['fire'],             6:['fire','flying'],
+  7:['water'],            8:['water'],            9:['water'],
+  10:['bug'],             11:['bug'],             12:['bug','flying'],
+  13:['bug','poison'],    14:['bug','poison'],    15:['bug','poison'],
+  16:['normal','flying'], 17:['normal','flying'], 18:['normal','flying'],
+  19:['normal'],          20:['normal'],
+  21:['normal','flying'], 22:['normal','flying'],
+  23:['poison'],          24:['poison'],
+  25:['electric'],        26:['electric'],
+  27:['ground'],          28:['ground'],
+  29:['poison'],          30:['poison'],          31:['poison','ground'],
+  32:['poison'],          33:['poison'],          34:['poison','ground'],
+  35:['normal'],          36:['normal'],
+  37:['fire'],            38:['fire'],
+  39:['normal'],          40:['normal'],
+  41:['poison','flying'], 42:['poison','flying'],
+  43:['grass','poison'],  44:['grass','poison'],  45:['grass','poison'],
+  46:['bug','grass'],     47:['bug','grass'],
+  48:['bug','poison'],    49:['bug','poison'],
+  50:['ground'],          51:['ground'],
+  52:['normal'],          53:['normal'],
+  54:['water'],           55:['water'],
+  56:['fighting'],        57:['fighting'],
+  58:['fire'],            59:['fire'],
+  60:['water'],           61:['water'],           62:['water','fighting'],
+  63:['psychic'],         64:['psychic'],         65:['psychic'],
+  66:['fighting'],        67:['fighting'],        68:['fighting'],
+  69:['grass','poison'],  70:['grass','poison'],  71:['grass','poison'],
+  72:['water','poison'],  73:['water','poison'],
+  74:['rock','ground'],   75:['rock','ground'],   76:['rock','ground'],
+  77:['fire'],            78:['fire'],
+  79:['water','psychic'], 80:['water','psychic'],
+  81:['electric','steel'],82:['electric','steel'],
+  83:['normal','flying'], 84:['normal','flying'], 85:['normal','flying'],
+  86:['water'],           87:['water','ice'],
+  88:['poison'],          89:['poison'],
+  90:['water'],           91:['water','ice'],
+  92:['ghost','poison'],  93:['ghost','poison'],  94:['ghost','poison'],
+  95:['rock','ground'],
+  96:['psychic'],         97:['psychic'],
+  98:['water'],           99:['water'],
+  100:['electric'],       101:['electric'],
+  102:['grass','psychic'],103:['grass','psychic'],
+  104:['ground','rock'],  105:['ground','rock'],
+  106:['fighting'],       107:['fighting'],
+  108:['normal'],
+  109:['poison'],         110:['poison'],
+  111:['ground','rock'],  112:['ground','rock'],
+  113:['normal'],
+  114:['grass'],
+  115:['normal'],
+  116:['water'],          117:['water'],
+  118:['water'],          119:['water'],
+  120:['water'],          121:['water','psychic'],
+  122:['psychic'],
+  123:['bug','flying'],
+  124:['ice','psychic'],
+  125:['electric'],
+  126:['fire'],
+  127:['bug'],
+  128:['normal'],
+  129:['water'],          130:['water','flying'],
+  131:['water','ice'],
+  132:['normal'],
+  133:['normal'],
+  134:['water'],          135:['electric'],       136:['fire'],
+  137:['normal'],
+  138:['rock','water'],   139:['rock','water'],
+  140:['rock','water'],   141:['rock','water'],
+  142:['rock','flying'],
+  143:['normal'],
+  144:['ice','flying'],
+  145:['electric','flying'],
+  146:['fire','flying'],
+  147:['dragon'],         148:['dragon'],         149:['dragon','flying'],
+  150:['psychic'],        151:['psychic'],
+
+  // ── 2세대 ──────────────────────────────────────────────
+  152:['grass'],          153:['grass'],          154:['grass'],
+  155:['fire'],           156:['fire'],           157:['fire'],
+  158:['water'],          159:['water'],          160:['water'],
+  161:['normal'],         162:['normal'],
+  163:['normal','flying'],164:['normal','flying'],
+  165:['bug','flying'],   166:['bug','flying'],
+  167:['bug','poison'],   168:['bug','poison'],
+  169:['poison','flying'],
+  170:['water','electric'],171:['water','electric'],
+  172:['electric'],
+  173:['normal'],         174:['normal'],
+  175:['normal'],         176:['normal','flying'],
+  177:['psychic','flying'],178:['psychic','flying'],
+  179:['electric'],       180:['electric'],       181:['electric'],
+  182:['grass'],
+  183:['water'],          184:['water'],
+  185:['rock'],
+  186:['water'],
+  187:['grass'],          188:['grass'],          189:['grass'],
+  190:['normal'],
+  191:['grass'],          192:['grass'],
+  193:['bug','flying'],
+  194:['water','ground'], 195:['water','ground'],
+  196:['psychic'],        197:['dark'],
+  198:['dark','flying'],
+  199:['water','psychic'],
+  200:['ghost'],
+  201:['psychic'],
+  202:['psychic'],
+  203:['normal','psychic'],
+  204:['bug','rock'],     205:['bug','steel'],
+  206:['normal'],
+  207:['ground','flying'],
+  208:['steel','ground'],
+  209:['normal'],         210:['normal'],
+  211:['water','poison'],
+  212:['bug','steel'],
+  213:['bug','rock'],
+  214:['bug','fighting'],
+  215:['dark','ice'],
+  216:['normal'],         217:['normal'],
+  218:['fire'],           219:['fire','rock'],
+  220:['ice','ground'],   221:['ice','ground'],
+  222:['water','rock'],
+  223:['water'],          224:['water'],
+  225:['ice','flying'],
+  226:['water','flying'],
+  227:['steel','flying'],
+  228:['dark','fire'],    229:['dark','fire'],
+  230:['water','dragon'],
+  231:['ground'],         232:['ground','steel'],
+  233:['normal'],
+  234:['normal'],
+  235:['normal'],
+  236:['fighting'],       237:['fighting'],
+  238:['ice','psychic'],
+  239:['electric'],       240:['fire'],
+  241:['normal'],         242:['normal'],
+  243:['electric'],       244:['fire'],           245:['water'],
+  246:['rock','ground'],  247:['rock','ground'],  248:['rock','dark'],
+  249:['psychic','flying'],250:['fire','flying'],  251:['psychic','grass'],
+
+  // ── 4세대 전설 ─────────────────────────────────────────
+  483:['steel','dragon'],  484:['water','dragon'],  487:['ghost','dragon'],
+
+  // ── 신화 ───────────────────────────────────────────────
+  493:['normal'],
+};
+
+// ── 타입 한글명 & 색상 ────────────────────────────────────────────────────────
+export const TYPE_META = {
+  normal:   { label:'노말',   color:'#A8A878' },
+  fire:     { label:'불꽃',   color:'#F08030' },
+  water:    { label:'물',     color:'#6890F0' },
+  grass:    { label:'풀',     color:'#78C850' },
+  electric: { label:'전기',   color:'#F8D030' },
+  ice:      { label:'얼음',   color:'#98D8D8' },
+  fighting: { label:'격투',   color:'#C03028' },
+  poison:   { label:'독',     color:'#A040A0' },
+  ground:   { label:'땅',     color:'#E0C068' },
+  flying:   { label:'비행',   color:'#A890F0' },
+  psychic:  { label:'에스퍼', color:'#F85888' },
+  bug:      { label:'벌레',   color:'#A8B820' },
+  rock:     { label:'바위',   color:'#B8A038' },
+  ghost:    { label:'고스트', color:'#705898' },
+  dragon:   { label:'드래곤', color:'#7038F8' },
+  dark:     { label:'악',     color:'#705848' },
+  steel:    { label:'강철',   color:'#B8B8D0' },
+  fairy:    { label:'페어리', color:'#EE99AC' },
+  myth:     { label:'신화',   color:'#FF6B00' },
+};
+
+// ── 타입 상성표 (공격 타입 → 효과적인 방어 타입 목록) ─────────────────────────
+export const TYPE_CHART = {
+  fire:     ['grass', 'ice', 'steel', 'bug'],
+  water:    ['fire', 'rock', 'ground'],
+  grass:    ['water', 'rock', 'ground'],
+  electric: ['water', 'flying'],
+  ice:      ['grass', 'dragon', 'flying', 'ground'],
+  fighting: ['normal', 'ice', 'rock', 'steel', 'dark'],
+  poison:   ['grass', 'fairy'],
+  ground:   ['fire', 'electric', 'rock', 'steel', 'poison'],
+  flying:   ['grass', 'fighting', 'bug'],
+  psychic:  ['fighting', 'poison'],
+  bug:      ['grass', 'psychic', 'dark'],
+  rock:     ['fire', 'ice', 'flying', 'bug'],
+  ghost:    ['ghost', 'psychic'],
+  dragon:   ['dragon'],
+  dark:     ['ghost', 'psychic'],
+  steel:    ['ice', 'rock', 'fairy'],
+  fairy:    ['fighting', 'dragon', 'dark'],
+  normal:   [],
+  myth:     ['dragon', 'dark', 'ghost', 'psychic'],
+};
+
+// ── 타입별 기술 풀 ────────────────────────────────────────────────────────────
+export const TYPE_MOVES = {
+  grass:    ['🍃 잎날가르기', '🌿 에너지볼', '☀️ 솔라빔', '🌱 씨폭탄', '💚 메가드레인'],
+  fire:     ['🔥 불꽃방사', '🌋 화염방사', '💥 불대문자', '🔴 오버히트', '👊 불꽃펀치'],
+  water:    ['💧 물대포', '🌊 파도타기', '🌀 하이드로펌프', '💦 거품광선', '🐟 아쿠아테일'],
+  electric: ['⚡ 10만볼트', '🌩️ 번개', '🔵 방전', '✨ 전기충격', '⚡ 볼트태클'],
+  ice:      ['❄️ 냉동빔', '🧊 눈보라', '💠 얼음파편', '🌨️ 오로라빔', '❄️ 아이스번'],
+  psychic:  ['🌀 사이코키네시스', '💜 염동력', '🔮 미래예지', '💫 사이코커터', '🌙 꿈먹기'],
+  fighting: ['🥊 메가톤킥', '💪 인파이트', '✖️ 역십자', '🤜 겨워지르기', '💢 기합구슬'],
+  poison:   ['☠️ 독침붕', '🟣 오물폭탄', '💀 독가스', '🟪 슬러지웨이브', '🕷️ 독꼬챙이'],
+  ground:   ['🌍 지진', '⛏️ 땅파기', '🟤 대지의힘', '💨 흙뿌리기', '💣 거대함성'],
+  rock:     ['💎 스톤에지', '🪨 바위눈사태', '⚫ 바위깨기', '🗿 스텔스록', '🔘 돌맹이공격'],
+  flying:   ['🌪️ 공중날기', '🌬️ 에어슬래시', '⛈️ 폭풍', '🐦 제비반환', '💨 용기류'],
+  ghost:    ['👻 섀도볼', '🌑 나이트헤드', '⚰️ 저주', '💀 운명의장난', '👁️ 원령의혀'],
+  dark:     ['🌑 배꼼씹기', '🦝 도둑질', '🔪 페인트', '🌀 파국의회오리', '🖤 악의파동'],
+  dragon:   ['🐲 드래곤클로', '🌀 역린', '🐉 용의숨결', '💨 드래곤테일', '☄️ 용성군'],
+  steel:    ['⚙️ 아이언테일', '🛡️ 철벽', '✨ 섬광', '💠 기합구슬', '🔩 메탈버스트'],
+  bug:      ['🐛 벌레먹음', '🦏 메가혼', '🌬️ 은빛바람', '🔊 버그버즈', '🦋 날개쉬기'],
+  normal:   ['💥 몸통박치기', '🌟 하이퍼빔', '🎯 속이기', '⭐ 유성연속치기', '⚔️ 연속베기'],
+  myth:     ['✨ 심판의칼날', '🌟 신의분노', '☄️ 용성군', '🔱 창조의빛', '💥 대폭발'],
+};

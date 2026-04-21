@@ -331,7 +331,7 @@ export default function EnhancementScreen() {
               <div className={`enhance-result-flash ${enhanceResult}`}>
                 {enhanceResult === 'success'   && `🎉 성공! +${level} 달성!`}
                 {enhanceResult === 'fail'      && `💨 실패... (+${level} 유지)`}
-                {enhanceResult === 'shielded'  && `🛡️ 파편 1000개로 파괴를 막았습니다!`}
+                {enhanceResult === 'shielded'  && `🛡️ 파편 ${((level - 14) * 1000).toLocaleString()}개로 파괴를 막았습니다!`}
                 {enhanceResult === 'decreased' && `📉 실패! +${level}로 하락`}
                 {enhanceResult === 'destroyed' && `💥 파괴됨! 포켓몬을 잃었습니다!`}
               </div>
@@ -347,40 +347,44 @@ export default function EnhancementScreen() {
             </button>
 
             {/* 파괴 위험 경고 + 파편 방어 */}
-            {failEffect === 'destroy' && (
-              <div style={{
-                background: 'rgba(183,28,28,0.15)', border: '1px solid var(--fail)',
-                borderRadius: 8, padding: '10px 14px', fontSize: '0.8rem',
-                color: 'var(--fail)', textAlign: 'center',
-              }}>
-                ⚠️ 위험 구간! 실패하면 이 포켓몬이 영구히 파괴됩니다!
-                <br/>
-                <span style={{ color: 'var(--text2)' }}>
-                  파괴 보상: 💎 {level * 15} 파편
-                </span>
-                <div style={{ marginTop: 8 }}>
-                  <button
-                    onClick={() => setUseShield(v => !v)}
-                    style={{
-                      background: useShield ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.06)',
-                      border: `1px solid ${useShield ? 'var(--primary)' : 'rgba(255,255,255,0.2)'}`,
-                      borderRadius: 8, padding: '5px 14px', cursor: 'pointer',
-                      color: useShield ? 'var(--primary)' : 'var(--text2)',
-                      fontWeight: 700, fontSize: '0.8rem',
-                      opacity: state.fragments >= 1000 ? 1 : 0.4,
-                    }}
-                    disabled={state.fragments < 1000}
-                    title={state.fragments < 1000 ? '파편이 부족합니다' : ''}
-                  >
-                    🛡️ 파편 1000개로 파괴 방지 {useShield ? '✅' : '⬜'}
-                  </button>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text2)', marginTop: 3 }}>
-                    보유 파편: 💎 {state.fragments.toLocaleString()}
-                    {state.fragments < 1000 && <span style={{ color: 'var(--fail)' }}> (부족)</span>}
+            {failEffect === 'destroy' && (() => {
+              const shieldCost = (level - 14) * 1000;
+              const canShield = state.fragments >= shieldCost;
+              return (
+                <div style={{
+                  background: 'rgba(183,28,28,0.15)', border: '1px solid var(--fail)',
+                  borderRadius: 8, padding: '10px 14px', fontSize: '0.8rem',
+                  color: 'var(--fail)', textAlign: 'center',
+                }}>
+                  ⚠️ 위험 구간! 실패하면 이 포켓몬이 영구히 파괴됩니다!
+                  <br/>
+                  <span style={{ color: 'var(--text2)' }}>
+                    파괴 보상: 💎 {level * 15} 파편
+                  </span>
+                  <div style={{ marginTop: 8 }}>
+                    <button
+                      onClick={() => setUseShield(v => !v)}
+                      style={{
+                        background: useShield ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.06)',
+                        border: `1px solid ${useShield ? 'var(--primary)' : 'rgba(255,255,255,0.2)'}`,
+                        borderRadius: 8, padding: '5px 14px', cursor: 'pointer',
+                        color: useShield ? 'var(--primary)' : 'var(--text2)',
+                        fontWeight: 700, fontSize: '0.8rem',
+                        opacity: canShield ? 1 : 0.4,
+                      }}
+                      disabled={!canShield}
+                      title={!canShield ? '파편이 부족합니다' : ''}
+                    >
+                      🛡️ 파편 {shieldCost.toLocaleString()}개로 파괴 방지 {useShield ? '✅' : '⬜'}
+                    </button>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text2)', marginTop: 3 }}>
+                      보유 파편: 💎 {state.fragments.toLocaleString()}
+                      {!canShield && <span style={{ color: 'var(--fail)' }}> (부족)</span>}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </>
         )}
 

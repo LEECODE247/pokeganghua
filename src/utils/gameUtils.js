@@ -1,4 +1,4 @@
-import { POKEMON_NAMES, ALL_POKEMON_BY_RARITY, ENHANCE_CONFIG, POKEMON_POWER_BASE } from '../data/pokemonData.js';
+import { POKEMON_NAMES, ALL_POKEMON_BY_RARITY, ENHANCE_CONFIG, POKEMON_POWER_BASE, POKEMON_TYPES, TYPE_META, TYPE_CHART } from '../data/pokemonData.js';
 import { WILD_EXCLUDED } from '../data/evolutionData.js';
 
 let _instanceCounter = 0;
@@ -90,9 +90,133 @@ export function getRarityColor(rarity) {
 }
 
 export function formatCoins(n) {
-  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
-  return n.toLocaleString();
+  const v = n ?? 0;
+  if (v >= 1000000) return (v / 1000000).toFixed(1) + 'M';
+  if (v >= 1000) return (v / 1000).toFixed(1) + 'K';
+  return v.toLocaleString();
+}
+
+// ── 타입 상성 계산 ────────────────────────────────────────────────────────────
+export function getTypeAdvantage(attackerTypes, defenderTypes) {
+  for (const atk of attackerTypes) {
+    const effective = TYPE_CHART[atk] || [];
+    if (defenderTypes.some(def => effective.includes(def)))
+      return { multiplier: 1.25, label: '효과 좋음 ✨' };
+  }
+  for (const def of defenderTypes) {
+    const effective = TYPE_CHART[def] || [];
+    if (attackerTypes.some(atk => effective.includes(atk)))
+      return { multiplier: 0.8,  label: '효과 나쁨 💨' };
+  }
+  return { multiplier: 1, label: null };
+}
+
+// ── 배틀 조합 시너지 ──────────────────────────────────────────────────────────
+const FIXED_SYNERGIES = [
+  {
+    id: 'legendary_birds', name: '전설의 새', icon: '🦅',
+    desc: '썬더 · 파이어 · 프리저',
+    requiredIds: [145, 146, 144],
+    multiplier: 2.5, kind: 'fixed_all',
+  },
+  {
+    id: 'gen1_starters', name: '1세대 삼인방', icon: '1️⃣',
+    desc: '이상해풀 · 거북왕 · 리자몽',
+    requiredIds: [3, 6, 9],
+    multiplier: 3, kind: 'fixed_all',
+  },
+  {
+    id: 'gen2_starters', name: '2세대 삼인방', icon: '2️⃣',
+    desc: '메가니움 · 장크로다일 · 블레이범',
+    requiredIds: [154, 160, 157],
+    multiplier: 3, kind: 'fixed_all',
+  },
+  {
+    id: 'divine_blessing', name: '신의 가호', icon: '✨',
+    desc: '아르세우스 포함 + 임의 2마리',
+    arceusId: 493,
+    multiplier: 2, kind: 'arceus',
+  },
+];
+
+// 조합표 카탈로그 (UI 표시용)
+export const SYNERGY_CATALOG = [
+  { fixedId: 'legendary_birds', name: '전설의 새',    icon: '🦅', desc: '썬더 + 파이어 + 프리저',          bonus: '전체 ×2.5',       color: '#4fc3f7' },
+  { fixedId: 'gen1_starters',   name: '1세대 삼인방', icon: '1️⃣', desc: '이상해풀 + 거북왕 + 리자몽',       bonus: '전체 ×3',         color: '#81c784' },
+  { fixedId: 'gen2_starters',   name: '2세대 삼인방', icon: '2️⃣', desc: '메가니움 + 장크로다일 + 블레이범', bonus: '전체 ×3',         color: '#4db6ac' },
+  { fixedId: 'divine_blessing', name: '신의 가호',    icon: '✨', desc: '아르세우스 + 임의 2마리',          bonus: '나머지 ×2',       color: '#ffb74d' },
+  { fixedId: 'type3',           name: '삼색 공명',    icon: '🔱', desc: '3마리 모두 같은 타입',             bonus: '전체 ×1.5',       color: '#ce93d8' },
+  { fixedId: 'type2',           name: '듀오 공명',    icon: '🔗', desc: '2마리가 같은 타입 보유',           bonus: '해당 2마리 ×1.2', color: '#90caf9' },
+];
+
+export function getTeamSynergies(team) {
+  // team: [p, p, p] — pokemon object or null per slot
+  const multipliers = [1.0, 1.0, 1.0];
+  const active = [];
+  const partial = [];
+
+  const ids = team.map(p => p?.pokemonId ?? null);
+  const filled = ids.filter(id => id !== null).length;
+
+  // ── 고정 시너지 (전설의새, 스타터, 신의가호) ─────────────────
+  for (const syn of FIXED_SYNERGIES) {
+    if (syn.kind === 'arceus') {
+      const arcIdx = ids.indexOf(syn.arceusId);
+      if (arcIdx !== -1 && filled === 3) {
+        // appliedSlots: 아르세우스 제외 슬롯 인덱스 배열 (boolean이 아닌 숫자)
+        const nonArcSlots = ids.reduce((acc, id, i) => {
+          if (i !== arcIdx && id !== null) acc.push(i);
+          return acc;
+        }, []);
+        active.push({ ...syn, appliedSlots: nonArcSlots });
+        nonArcSlots.forEach(i => { multipliers[i] *= syn.multiplier; });
+      } else {
+        const missing = [];
+        if (arcIdx === -1) missing.push('아르세우스');
+        if (filled < 3) missing.push(`슬롯 ${3 - filled}개 비어있음`);
+        partial.push({ ...syn, foundCount: filled + (arcIdx !== -1 ? 0 : 0), missing });
+      }
+    } else {
+      const slots = syn.requiredIds.map(reqId => ids.indexOf(reqId));
+      const foundSlots = slots.filter(i => i !== -1);
+      if (foundSlots.length === syn.requiredIds.length) {
+        active.push({ ...syn, appliedSlots: foundSlots });
+        foundSlots.forEach(i => { multipliers[i] *= syn.multiplier; });
+      } else {
+        const missingNames = syn.requiredIds
+          .filter(reqId => !ids.includes(reqId))
+          .map(id => POKEMON_NAMES[id] || `#${id}`);
+        partial.push({ ...syn, foundCount: foundSlots.length, missing: missingNames });
+      }
+    }
+  }
+
+  // ── 타입 시너지 (누적 곱셈으로 중복 적용) ───────────────────────
+  const typeToSlots = {};
+  team.forEach((p, i) => {
+    if (!p) return;
+    (POKEMON_TYPES[p.pokemonId] || ['normal']).forEach(t => {
+      if (!typeToSlots[t]) typeToSlots[t] = [];
+      typeToSlots[t].push(i);
+    });
+  });
+
+  for (const [type, slots] of Object.entries(typeToSlots)) {
+    const meta = TYPE_META[type] || { label: type, color: '#888' };
+    if (slots.length >= 3) {
+      const mult = 1.5;
+      active.push({ id: `type3_${type}`, name: `${meta.label} 삼색 공명`, icon: '🔱',
+        desc: `3마리 모두 ${meta.label} 타입`, multiplier: mult, appliedSlots: slots, color: meta.color });
+      slots.forEach(i => { multipliers[i] *= mult; });
+    } else if (slots.length === 2) {
+      const mult = 1.2;
+      active.push({ id: `type2_${type}`, name: `${meta.label} 듀오`, icon: '🔗',
+        desc: `${meta.label} 타입 공명`, multiplier: mult, appliedSlots: slots, color: meta.color });
+      slots.forEach(i => { multipliers[i] *= mult; });
+    }
+  }
+
+  return { multipliers, active, partial };
 }
 
 export function formatCooldown(ms) {
