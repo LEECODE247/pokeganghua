@@ -38,6 +38,8 @@ const INITIAL_STATE = {
   totalEnhanced: 0,
   totalBattles: 0,
   totalWins: 0,
+  pvpBattles: 0,
+  pvpWins: 0,
   lastCoinClaim: 0,
   dailyBattleCount: 0,
   battleResetDate: '',
@@ -216,6 +218,8 @@ function gameReducer(state, action) {
         coins: state.coins + action.coins,
         totalBattles: state.totalBattles + 1,
         totalWins: state.totalWins + 1,
+        pvpBattles: (state.pvpBattles || 0) + 1,
+        pvpWins: (state.pvpWins || 0) + 1,
         dailyBattleCount: prevCount + 1,
         battleResetDate: today,
       };
@@ -227,6 +231,7 @@ function gameReducer(state, action) {
       return {
         ...state,
         totalBattles: state.totalBattles + 1,
+        pvpBattles: (state.pvpBattles || 0) + 1,
         dailyBattleCount: prevCount + 1,
         battleResetDate: today,
       };

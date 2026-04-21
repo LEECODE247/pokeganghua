@@ -241,8 +241,8 @@ export default function BattleScreen() {
       .filter(p => Array.isArray(p.battle_pokemon) && p.battle_pokemon.length === 3)
       .map(p => {
         const gs = p.game_state || {};
-        const totalBattles = gs.totalBattles || 0;
-        const totalWins    = gs.totalWins    || 0;
+        const totalBattles = gs.pvpBattles || 0;
+        const totalWins    = gs.pvpWins    || 0;
         const winRate      = totalBattles > 0 ? Math.round((totalWins / totalBattles) * 100) : 0;
         const totalPower   = p.battle_pokemon.reduce((s, m) => s + (m?.power || 0), 0);
         return { ...p, totalBattles, totalWins, winRate, totalPower };
