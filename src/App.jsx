@@ -429,18 +429,14 @@ export default function App() {
     const stored = getStoredSession();
     if (!stored) { setPhase('login'); return; }
 
-    // 저장된 세션으로 게임 상태 복원 (Supabase vs localStorage 중 최신 사용)
+    // Supabase가 항상 최우선 — 실패 시에만 localStorage 폴백
     loadGameState(stored.accountId)
       .then(gameState => {
-        const local = loadStateLocal(stored.accountId);
-        const supabaseAt = gameState?._savedAt ?? 0;
-        const localAt    = local?.savedAt ?? 0;
-        const best = localAt > supabaseAt ? local.state : gameState;
-        setSession({ ...stored, initialState: best });
+        const finalState = gameState ?? loadStateLocal(stored.accountId)?.state;
+        setSession({ ...stored, initialState: finalState });
         setPhase('game');
       })
       .catch(() => {
-        // Supabase 실패 시 로컬 백업으로 복원 시도
         const local = loadStateLocal(stored.accountId);
         if (local?.state) {
           setSession({ ...stored, initialState: local.state });
@@ -456,11 +452,8 @@ export default function App() {
     const s = { accountId, nickname };
     setStoredSession(s);
     loadGameState(accountId).then(gameState => {
-      const local = loadStateLocal(accountId);
-      const supabaseAt = gameState?._savedAt ?? 0;
-      const localAt    = local?.savedAt ?? 0;
-      const best = localAt > supabaseAt ? local.state : gameState;
-      setSession({ ...s, initialState: best });
+      const finalState = gameState ?? loadStateLocal(accountId)?.state;
+      setSession({ ...s, initialState: finalState });
       setPhase('game');
     });
   }
