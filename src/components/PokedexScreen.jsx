@@ -287,9 +287,16 @@ export default function PokedexScreen() {
       {/* 이로치 탭 */}
       {activeTab === 'shiny' && (() => {
         const shinySet = new Set(state.shinyPokedex || []);
-        const allIds = [...GEN1_IDS, ...GEN2_IDS];
-        const totalShiny = allIds.length; // 251
-        const caughtShiny = shinySet.size;
+        const genAllSet = new Set([...GEN1_IDS, ...GEN2_IDS]);
+        // 이로치 도감 대상: 1~3성 1·2세대만
+        const shinyTargetIds = [
+          ...(ALL_POKEMON_BY_RARITY[1] || []),
+          ...(ALL_POKEMON_BY_RARITY[2] || []),
+          ...(ALL_POKEMON_BY_RARITY[3] || []),
+        ].filter(id => genAllSet.has(id));
+        const totalShiny = shinyTargetIds.length;
+        const halfTarget = Math.ceil(totalShiny / 2);
+        const caughtShiny = shinyTargetIds.filter(id => shinySet.has(id)).length;
         const pct = Math.round((caughtShiny / totalShiny) * 100);
         return (
           <div>
@@ -301,7 +308,7 @@ export default function PokedexScreen() {
               boxShadow: caughtShiny > 0 ? '0 0 12px rgba(0,229,255,0.2)' : 'none',
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#00e5ff' }}>✨ 이로치 도감</span>
+                <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#00e5ff' }}>✨ 이로치 도감 (1~3성)</span>
                 <span style={{ fontSize: '0.82rem', color: 'var(--text2)' }}>{caughtShiny} / {totalShiny} ({pct}%)</span>
               </div>
               <div style={{ height: 7, background: 'var(--bg)', borderRadius: 99, overflow: 'hidden', marginBottom: 10 }}>
@@ -311,25 +318,53 @@ export default function PokedexScreen() {
                   transition: 'width 0.4s ease',
                 }} />
               </div>
-              <RewardRow
-                label="절반 달성" target={126} caught={caughtShiny}
-                rewarded={state.shinyPokedexHalfRewarded}
-                rewardDesc="랜덤 ★3 황금 +20강 포켓몬"
-                rewardColor="#00e5ff"
-                onClaim={() => dispatch({ type: 'CLAIM_SHINY_HALF_REWARD' })}
-              />
-              <RewardRow
-                label="완성 보상" target={251} caught={caughtShiny}
-                rewarded={state.shinyPokedexRewarded}
-                rewardDesc="⭐ 아르세우스 지급"
-                rewardColor="#b388ff"
-                onClaim={() => dispatch({ type: 'CLAIM_SHINY_FULL_REWARD' })}
-              />
+              {/* 절반 보상 */}
+              <div style={{
+                background: state.shinyPokedexHalfRewarded ? 'rgba(0,229,255,0.08)' : 'var(--bg)',
+                border: `1px solid ${caughtShiny >= halfTarget ? '#00e5ff44' : 'var(--border)'}`,
+                borderRadius: 8, padding: '8px 12px', marginTop: 8,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+              }}>
+                <div style={{ fontSize: '0.75rem', color: caughtShiny >= halfTarget ? '#00e5ff' : 'var(--text2)', fontWeight: 700, flexShrink: 0 }}>
+                  절반 달성 ({halfTarget}마리)
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
+                  <img src={getPokemonShinyImageUrl(150)} alt="이로치 뮤츠" style={{ width: 32, height: 32, imageRendering: 'pixelated', filter: 'drop-shadow(0 0 4px rgba(0,229,255,0.8))' }} />
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text2)' }}>이로치 뮤츠 S급 지급</span>
+                </div>
+                {caughtShiny >= halfTarget && !state.shinyPokedexHalfRewarded && (
+                  <button className="btn" style={{ background: '#00e5ff', color: '#000', fontWeight: 800, fontSize: '0.72rem', padding: '4px 10px', borderRadius: 6, flexShrink: 0 }}
+                    onClick={() => dispatch({ type: 'CLAIM_SHINY_HALF_REWARD' })}>🎁 수령</button>
+                )}
+                {state.shinyPokedexHalfRewarded && <span style={{ fontSize: '0.72rem', color: '#00e5ff', fontWeight: 700, flexShrink: 0 }}>✅ 완료</span>}
+                {caughtShiny < halfTarget && !state.shinyPokedexHalfRewarded && <span style={{ fontSize: '0.72rem', color: 'var(--text2)', flexShrink: 0 }}>🔒 {halfTarget - caughtShiny}마리 남음</span>}
+              </div>
+              {/* 완성 보상 */}
+              <div style={{
+                background: state.shinyPokedexRewarded ? 'rgba(179,136,255,0.08)' : 'var(--bg)',
+                border: `1px solid ${caughtShiny >= totalShiny ? '#b388ff44' : 'var(--border)'}`,
+                borderRadius: 8, padding: '8px 12px', marginTop: 8,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+              }}>
+                <div style={{ fontSize: '0.75rem', color: caughtShiny >= totalShiny ? '#b388ff' : 'var(--text2)', fontWeight: 700, flexShrink: 0 }}>
+                  완성 보상 ({totalShiny}마리)
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
+                  <img src={getPokemonShinyImageUrl(493)} alt="이로치 아르세우스" style={{ width: 32, height: 32, imageRendering: 'pixelated', filter: 'drop-shadow(0 0 4px rgba(179,136,255,0.8))' }} />
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text2)' }}>이로치 아르세우스 S급 지급</span>
+                </div>
+                {caughtShiny >= totalShiny && !state.shinyPokedexRewarded && (
+                  <button className="btn" style={{ background: '#b388ff', color: '#000', fontWeight: 800, fontSize: '0.72rem', padding: '4px 10px', borderRadius: 6, flexShrink: 0 }}
+                    onClick={() => dispatch({ type: 'CLAIM_SHINY_FULL_REWARD' })}>🎁 수령</button>
+                )}
+                {state.shinyPokedexRewarded && <span style={{ fontSize: '0.72rem', color: '#b388ff', fontWeight: 700, flexShrink: 0 }}>✅ 완료</span>}
+                {caughtShiny < totalShiny && !state.shinyPokedexRewarded && <span style={{ fontSize: '0.72rem', color: 'var(--text2)', flexShrink: 0 }}>🔒 {totalShiny - caughtShiny}마리 남음</span>}
+              </div>
             </div>
 
-            {/* 이로치 도감 그리드 */}
-            {[5,4,3,2,1].map(rarity => {
-              const ids = (ALL_POKEMON_BY_RARITY[rarity] || []).filter(id => [...GEN1_IDS, ...GEN2_IDS].includes(id));
+            {/* 이로치 도감 그리드 (1~3성만) */}
+            {[3,2,1].map(rarity => {
+              const ids = (ALL_POKEMON_BY_RARITY[rarity] || []).filter(id => genAllSet.has(id));
               if (ids.length === 0) return null;
               const caughtCount = ids.filter(id => shinySet.has(id)).length;
               const color = getRarityColor(rarity);

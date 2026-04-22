@@ -55,6 +55,13 @@ const INITIAL_STATE = {
   lastEvolution: null,
 };
 
+// 이로치 도감 대상: 1~3성 1·2세대 포켓몬
+const GEN_ALL_SET = new Set([...GEN1_IDS, ...GEN2_IDS]);
+const SHINY_TARGET_IDS = new Set(
+  [...(ALL_POKEMON_BY_RARITY[1] || []), ...(ALL_POKEMON_BY_RARITY[2] || []), ...(ALL_POKEMON_BY_RARITY[3] || [])]
+    .filter(id => GEN_ALL_SET.has(id))
+);
+
 function gameReducer(state, action) {
   switch (action.type) {
 
@@ -370,28 +377,26 @@ function gameReducer(state, action) {
     }
 
     case 'CLAIM_SHINY_HALF_REWARD': {
-      // 이로치 도감 절반(126마리) → 랜덤 ★3 황금 +20강
+      // 1~3성 이로치 절반 → 이로치 뮤츠(★4) 지급
       if (state.shinyPokedexHalfRewarded) return state;
-      if ((state.shinyPokedex || []).length < 126) return state;
-      const rarity3Pool = ALL_POKEMON_BY_RARITY[3];
-      const rewardId = rarity3Pool[Math.floor(Math.random() * rarity3Pool.length)];
-      const rewardPokemon = {
-        ...createPokemonInstance(rewardId, 3),
-        sizeGrade: 'S', enhanceLevel: 20, isGolden: true,
-      };
+      const shinyTarget = SHINY_TARGET_IDS;
+      if ((state.shinyPokedex || []).filter(id => shinyTarget.has(id)).length < Math.ceil(shinyTarget.size / 2)) return state;
+      const mewtwo = { ...createPokemonInstance(150, 4), sizeGrade: 'S', enhanceLevel: 0, isShiny: true };
       return {
         ...state,
-        inventory: [...state.inventory, rewardPokemon],
-        pokedex: state.pokedex.includes(rewardId) ? state.pokedex : [...state.pokedex, rewardId],
+        inventory: [...state.inventory, mewtwo],
+        pokedex: state.pokedex.includes(150) ? state.pokedex : [...state.pokedex, 150],
+        shinyPokedex: (state.shinyPokedex || []).includes(150) ? state.shinyPokedex : [...(state.shinyPokedex || []), 150],
         shinyPokedexHalfRewarded: true,
       };
     }
 
     case 'CLAIM_SHINY_FULL_REWARD': {
-      // 이로치 도감 완성(251마리) → 아르세우스 지급
+      // 1~3성 이로치 완성 → 이로치 아르세우스(★5) 지급
       if (state.shinyPokedexRewarded) return state;
-      if ((state.shinyPokedex || []).length < 251) return state;
-      const arceus = { ...createPokemonInstance(493, 5), sizeGrade: 'S', enhanceLevel: 0 };
+      const shinyTargetFull = SHINY_TARGET_IDS;
+      if ((state.shinyPokedex || []).filter(id => shinyTargetFull.has(id)).length < shinyTargetFull.size) return state;
+      const arceus = { ...createPokemonInstance(493, 5), sizeGrade: 'S', enhanceLevel: 0, isShiny: true };
       return {
         ...state,
         inventory: [...state.inventory, arceus],

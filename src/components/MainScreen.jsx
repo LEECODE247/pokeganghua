@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useGame } from '../App.jsx';
-import { formatCoins } from '../utils/gameUtils.js';
+import { formatCoins, getPokemonShinyImageUrl } from '../utils/gameUtils.js';
 
 // ── 업데이트 공지 데이터 ──────────────────────────────────────────────────────
 const UPDATES = [
@@ -25,8 +25,13 @@ const UPDATES = [
         items: [
           '도감에 이로치 전용 탭이 추가되었습니다.',
           '이로치 포켓몬을 포획하면 이로치 도감에 별도로 등록됩니다.',
-          '이로치 126마리 달성 → 랜덤 ★3 황금 +20강 포켓몬 지급',
-          '이로치 251마리 완성 → 아르세우스 지급',
+          '대상: 1~3성 1·2세대 포켓몬 (전설·신화 제외)',
+          '★ 절반 달성 → 이로치 뮤츠 S급 지급 ✦',
+          '★★ 전체 완성 → 이로치 아르세우스 S급 지급 ✦',
+        ],
+        images: [
+          { id: 150, label: '이로치 뮤츠' },
+          { id: 493, label: '이로치 아르세우스' },
         ],
       },
     ],
@@ -146,6 +151,25 @@ function UpdateModal({ update, onClose }) {
                 </li>
               ))}
             </ul>
+            {sec.images && (
+              <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 10 }}>
+                {sec.images.map(({ id, label }) => (
+                  <div key={id} style={{ textAlign: 'center' }}>
+                    <img
+                      src={getPokemonShinyImageUrl(id)}
+                      alt={label}
+                      style={{
+                        width: 64, height: 64, imageRendering: 'pixelated',
+                        filter: 'drop-shadow(0 0 8px rgba(0,229,255,0.9)) brightness(1.1)',
+                      }}
+                    />
+                    <div style={{ fontSize: '0.65rem', color: '#00e5ff', fontWeight: 700, marginTop: 2 }}>
+                      ✦ {label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>
