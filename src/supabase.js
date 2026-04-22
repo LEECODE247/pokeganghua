@@ -78,9 +78,19 @@ export async function loadGameState(accountId) {
 }
 
 export async function saveGameState(accountId, gameState) {
-  await supabase.functions.invoke('save-game', {
-    body: { accountId, gameState },
-  });
+  try {
+    const { error } = await supabase.functions.invoke('save-game', {
+      body: { accountId, gameState },
+    });
+    if (error) throw error;
+  } catch {
+    // Edge Function 실패 시 직접 저장으로 폴백
+    await supabase.from('game_saves').upsert({
+      account_id: accountId,
+      game_state: { ...gameState, _savedAt: Date.now() },
+      updated_at: new Date().toISOString(),
+    });
+  }
 }
 
 // ── 배틀 ────────────────────────────────────────────────
