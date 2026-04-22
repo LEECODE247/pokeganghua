@@ -515,7 +515,7 @@ function GameApp({ accountId, nickname, initialState, onLogout }) {
     saveStateLocal(accountId, state);
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      saveGameState(accountId, { ...state, _savedAt: Date.now() });
+      saveGameState(accountId, { nickname, ...state, _savedAt: Date.now() });
     }, 1000);
     return () => clearTimeout(saveTimer.current);
   }, [state, accountId]);
@@ -525,7 +525,7 @@ function GameApp({ accountId, nickname, initialState, onLogout }) {
     const flush = () => {
       clearTimeout(saveTimer.current);
       saveStateLocal(accountId, state);
-      saveGameState(accountId, { ...state, _savedAt: Date.now() });
+      saveGameState(accountId, { nickname, ...state, _savedAt: Date.now() });
     };
     window.addEventListener('beforeunload', flush);
     return () => window.removeEventListener('beforeunload', flush);
@@ -533,7 +533,8 @@ function GameApp({ accountId, nickname, initialState, onLogout }) {
 
   function saveNow(latestState) {
     clearTimeout(saveTimer.current);
-    saveGameState(accountId, latestState ?? state);
+    const s = latestState ?? state;
+    saveGameState(accountId, { nickname, ...s, _savedAt: Date.now() });
   }
 
   const screens = {
