@@ -908,6 +908,11 @@ export default function BattleScreen() {
                             <div style={{ fontSize: '0.52rem', color: getRarityColor(p.rarity), marginTop: 2 }}>
                               {'★'.repeat(p.rarity)}
                             </div>
+                            {p.enhanceLevel > 0 && (
+                              <div style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>
+                                +{p.enhanceLevel}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
