@@ -1,7 +1,24 @@
-import { POKEMON_NAMES, ALL_POKEMON_BY_RARITY, ENHANCE_CONFIG, POKEMON_POWER_BASE, POKEMON_TYPES, TYPE_META, TYPE_CHART } from '../data/pokemonData.js';
+import { POKEMON_NAMES, ALL_POKEMON_BY_RARITY, ENHANCE_CONFIG, POKEMON_POWER_BASE, POKEMON_TYPES, TYPE_META, TYPE_CHART, BALL_CONFIG } from '../data/pokemonData.js';
 import { WILD_EXCLUDED } from '../data/evolutionData.js';
 
 let _instanceCounter = 0;
+
+// 포획 결과 사전 계산 (애니메이션과 실제 state 반영 시점 분리용)
+export function rollCapture(ballType, pokemon, captureFailStreak) {
+  const ballCfg = BALL_CONFIG[ballType];
+  if (!ballCfg || !pokemon) return 'fail';
+  const isMythical   = pokemon.rarity === 5;
+  const arceusBlock  = isMythical && ballType !== 'master';
+  const baseRate     = ballCfg.rates[pokemon.rarity] ?? 0;
+  const catchRate    = arceusBlock ? 0
+    : isMythical ? baseRate
+    : Math.min(1, baseRate + Math.min(captureFailStreak, 10) * 0.01);
+  const roll = Math.random();
+  return arceusBlock ? 'fail'
+    : roll < catchRate       ? 'success'
+    : roll < catchRate + 0.18 ? 'near-miss'
+    : 'fail';
+}
 
 export function getPokemonImageUrl(id) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;

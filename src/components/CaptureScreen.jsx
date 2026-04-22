@@ -3,7 +3,7 @@ import { useGame } from '../App.jsx';
 import { BALL_CONFIG, POKEMON_TYPES, TYPE_META } from '../data/pokemonData.js';
 import {
   getPokemonImageUrl, getPokemonName,
-  getRarityStars, getRarityColor, formatCoins, calculateSellPrice,
+  getRarityStars, getRarityColor, formatCoins, calculateSellPrice, rollCapture,
 } from '../utils/gameUtils.js';
 
 const PHASE = {
@@ -25,8 +25,8 @@ export default function CaptureScreen() {
   const [thrownBall, setThrownBall] = useState(null);
   const [showResult, setShowResult] = useState(false);
   const [justSold, setJustSold] = useState(false);
-  const [countdown, setCountdown] = useState(null); // 3 | 2 | 1 | 'gotcha' | 'escaped' | null
-  const captureResultRef = useRef(null);
+  const [countdown, setCountdown] = useState(null);
+  const localResultRef = useRef(null); // 애니메이션용 사전 계산 결과
 
   useEffect(() => {
     if (wildPokemon) {
@@ -45,12 +45,7 @@ export default function CaptureScreen() {
     }
   }, [wildPokemon, phase]);
 
-  // captureResult를 ref에 동기화 (setTimeout 클로저에서 최신값 접근용)
-  useEffect(() => {
-    captureResultRef.current = captureResult;
-  }, [captureResult]);
-
-  // 볼이 던져지면 카운트다운 시작
+  // 볼이 던져지면 카운트다운 시작 — dispatch는 애니메이션 끝에 실행
   useEffect(() => {
     if (phase !== PHASE.SHAKING) { setCountdown(null); return; }
 
@@ -58,10 +53,11 @@ export default function CaptureScreen() {
     const t1 = setTimeout(() => setCountdown(2), 800);
     const t2 = setTimeout(() => setCountdown(1), 1600);
     const t3 = setTimeout(() => {
-      const r = captureResultRef.current;
-      setCountdown(r === 'success' ? 'gotcha' : 'escaped');
+      setCountdown(localResultRef.current === 'success' ? 'gotcha' : 'escaped');
     }, 2400);
     const t4 = setTimeout(() => {
+      // 애니메이션이 끝난 후에만 state 반영
+      dispatch({ type: 'ATTEMPT_CAPTURE', ballType: thrownBall, result: localResultRef.current });
       setPhase(PHASE.RESULT);
       setShowResult(true);
       setCountdown(null);
@@ -75,16 +71,18 @@ export default function CaptureScreen() {
     const cost = BALL_CONFIG[ballType]?.cost ?? Infinity;
     if (state.coins < cost) return;
 
+    // 결과를 미리 계산해서 ref에 저장 — 애니메이션만 구동, state는 아직 변경 안 함
+    localResultRef.current = rollCapture(ballType, wildPokemon, captureFailStreak);
+
     setThrownBall(ballType);
     setPhase(PHASE.THROWING);
     setShowResult(false);
     setJustSold(false);
 
     setTimeout(() => {
-      dispatch({ type: 'ATTEMPT_CAPTURE', ballType });
       setPhase(PHASE.SHAKING);
     }, 400);
-  }, [phase, state.coins, dispatch]);
+  }, [phase, state.coins, wildPokemon, captureFailStreak]);
 
   function nextJourney() {
     dispatch({ type: 'DISMISS_CAPTURE' });
@@ -112,8 +110,9 @@ export default function CaptureScreen() {
   const sellPrice = wildPokemon ? calculateSellPrice(wildPokemon) : 0;
   const isInPokedex = wildPokemon ? state.pokedex.includes(wildPokemon.pokemonId) : false;
 
+  const localResult = localResultRef.current;
   const imgAnimClass = phase === PHASE.APPEARING ? 'anim-bounce'
-    : phase === PHASE.SHAKING && captureResult === 'near-miss' ? 'anim-nearmiss'
+    : phase === PHASE.SHAKING && localResult === 'near-miss' ? 'anim-nearmiss'
     : phase === PHASE.RESULT && captureResult === 'success' ? 'anim-caught'
     : phase === PHASE.RESULT && captureResult !== 'success' ? 'anim-escape'
     : '';

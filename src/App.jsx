@@ -69,26 +69,13 @@ function gameReducer(state, action) {
     }
 
     case 'ATTEMPT_CAPTURE': {
-      const { ballType } = action;
+      const { ballType, result: preResult } = action;
       const ballCfg = BALL_CONFIG[ballType];
       if (!ballCfg || state.coins < ballCfg.cost || !state.wildPokemon) return state;
 
-      // ★5 아르세우스: 마스터볼 외 포획 불가 (실패 연속 보너스도 없음)
-      const isMythical = state.wildPokemon.rarity === 5;
-      const arceusBlock = isMythical && ballType !== 'master';
-
-      const baseRate  = ballCfg.rates[state.wildPokemon.rarity] ?? 0;
-      const catchRate = arceusBlock
-        ? 0
-        : isMythical
-        ? baseRate  // 아르세우스: fail streak 보너스 없음, 항상 고정 10%
-        : Math.min(1, baseRate + Math.min(state.captureFailStreak, 10) * 0.01);
-      const roll      = Math.random();
-      const result    = arceusBlock ? 'fail'
-        : roll < catchRate ? 'success'
-        : roll < catchRate + 0.18 ? 'near-miss'
-        : 'fail';
-      const captured  = result === 'success';
+      // 컴포넌트에서 사전 계산한 결과 사용 (애니메이션과 state 반영 시점 분리)
+      const result   = preResult ?? 'fail';
+      const captured = result === 'success';
 
       const newPokedex = captured && !state.pokedex.includes(state.wildPokemon.pokemonId)
         ? [...state.pokedex, state.wildPokemon.pokemonId]
