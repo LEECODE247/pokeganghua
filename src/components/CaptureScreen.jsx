@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useGame } from '../App.jsx';
 import { BALL_CONFIG, POKEMON_TYPES, TYPE_META } from '../data/pokemonData.js';
 import {
-  getPokemonImageUrl, getPokemonName,
+  getPokemonImageUrl, getPokemonShinyImageUrl, getPokemonName,
   getRarityStars, getRarityColor, formatCoins, calculateSellPrice, rollCapture,
 } from '../utils/gameUtils.js';
 
@@ -146,10 +146,11 @@ export default function CaptureScreen() {
         {/* 야생 포켓몬 카드 */}
         {wildPokemon && (
           <div
-            className={`wild-pokemon-card${wildPokemon.isGolden ? ' golden' : ''}${isLegendary ? ' legendary' : ''}${isMythical ? ' mythical' : ''}`}
+            className={`wild-pokemon-card${wildPokemon.isGolden ? ' golden' : ''}${wildPokemon.isShiny ? ' shiny' : ''}${isLegendary ? ' legendary' : ''}${isMythical ? ' mythical' : ''}`}
             style={
               isMythical  ? { borderColor: '#FF6B00', boxShadow: '0 0 40px rgba(255,107,0,0.75)' } :
-              isLegendary ? { borderColor: '#e040fb', boxShadow: '0 0 30px rgba(224,64,251,0.5)' } : {}
+              isLegendary ? { borderColor: '#e040fb', boxShadow: '0 0 30px rgba(224,64,251,0.5)' } :
+              wildPokemon.isShiny ? { borderColor: '#00e5ff', boxShadow: '0 0 24px rgba(0,229,255,0.6)' } : {}
             }
           >
             {/* 도감 등록 여부 뱃지 (왼쪽 상단) */}
@@ -165,22 +166,29 @@ export default function CaptureScreen() {
               {isInPokedex ? '✓ 도감등록' : '★ 미등록'}
             </div>
 
-            {wildPokemon.isGolden && <div className="golden-badge">✨ 황금!</div>}
-            {isMythical && !wildPokemon.isGolden && (
+            {wildPokemon.isShiny && (
+              <div className="golden-badge" style={{ background: 'linear-gradient(135deg,#00e5ff,#b388ff)', color: '#000' }}>✨ 이로치!</div>
+            )}
+            {wildPokemon.isGolden && <div className="golden-badge" style={{ top: wildPokemon.isShiny ? 36 : undefined }}>✨ 황금!</div>}
+            {isMythical && !wildPokemon.isGolden && !wildPokemon.isShiny && (
               <div className="golden-badge" style={{ background: 'linear-gradient(135deg,#FF6B00,#FFD700)', color: '#000' }}>🌟 신화!</div>
             )}
-            {isLegendary && !wildPokemon.isGolden && (
+            {isLegendary && !wildPokemon.isGolden && !wildPokemon.isShiny && (
               <div className="golden-badge" style={{ background: '#e040fb' }}>⭐ 전설!</div>
             )}
 
             <div className="pokemon-img-wrap">
               <img
-                src={getPokemonImageUrl(wildPokemon.pokemonId)}
+                src={wildPokemon.isShiny
+                  ? getPokemonShinyImageUrl(wildPokemon.pokemonId)
+                  : getPokemonImageUrl(wildPokemon.pokemonId)}
                 alt={getPokemonName(wildPokemon.pokemonId)}
                 className={`pokemon-img ${imgAnimClass}`}
                 style={{
                   filter: wildPokemon.isGolden
                     ? 'drop-shadow(0 0 12px rgba(255,214,0,0.9)) sepia(0.3) brightness(1.3)'
+                    : wildPokemon.isShiny
+                    ? 'drop-shadow(0 0 16px rgba(0,229,255,0.9)) brightness(1.1)'
                     : isMythical
                     ? 'drop-shadow(0 0 20px rgba(255,107,0,1)) brightness(1.1)'
                     : isLegendary
@@ -340,12 +348,16 @@ export default function CaptureScreen() {
           {captureResult === 'success' && wildPokemon && (
             <div style={{ textAlign: 'center' }}>
               <img
-                src={getPokemonImageUrl(wildPokemon.pokemonId)}
-                style={{ width: 100, height: 100, objectFit: 'contain', imageRendering: 'pixelated', animation: 'float 2s ease infinite' }}
+                src={wildPokemon.isShiny
+                  ? getPokemonShinyImageUrl(wildPokemon.pokemonId)
+                  : getPokemonImageUrl(wildPokemon.pokemonId)}
+                style={{ width: 100, height: 100, objectFit: 'contain', imageRendering: 'pixelated', animation: 'float 2s ease infinite',
+                  filter: wildPokemon.isShiny ? 'drop-shadow(0 0 12px rgba(0,229,255,0.9))' : undefined }}
                 alt=""
               />
               <div style={{ color: rarityColor, fontWeight: 700, fontSize: '1rem', marginTop: 6 }}>
                 {getPokemonName(wildPokemon.pokemonId)} 포획!
+                {wildPokemon.isShiny && <span style={{ color: '#00e5ff', marginLeft: 6 }}>✨ 이로치!</span>}
                 {wildPokemon.isGolden && <span style={{ color: 'var(--gold)', marginLeft: 6 }}>✨ 황금!</span>}
                 {isMythical && <span style={{ color: '#FF6B00', marginLeft: 6 }}>🌟 신화!</span>}
                 {isLegendary && !isMythical && <span style={{ color: '#e040fb', marginLeft: 6 }}>⭐ 전설!</span>}

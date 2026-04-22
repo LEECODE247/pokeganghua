@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useGame } from '../App.jsx';
 import { ALL_POKEMON_BY_RARITY, GEN1_IDS, GEN2_IDS } from '../data/pokemonData.js';
 import { EVOLUTIONS } from '../data/evolutionData.js';
-import { getPokemonImageUrl, getPokemonName, getRarityColor } from '../utils/gameUtils.js';
+import { getPokemonImageUrl, getPokemonShinyImageUrl, getPokemonName, getRarityColor } from '../utils/gameUtils.js';
 
 const RARITY_INFO = [
   { rarity: 5, label: '★★★★★ 신화',  color: '#FF6B00' },
@@ -16,10 +16,11 @@ const GEN1_SET = new Set(GEN1_IDS);
 const GEN2_SET = new Set(GEN2_IDS);
 
 const TABS = [
-  { key: 'all',  label: '전체',  icon: '📖' },
-  { key: 'gen1', label: '1세대', icon: '🔴' },
-  { key: 'gen2', label: '2세대', icon: '🟡' },
-  { key: 'evo',  label: '진화표', icon: '🔀' },
+  { key: 'all',   label: '전체',  icon: '📖' },
+  { key: 'gen1',  label: '1세대', icon: '🔴' },
+  { key: 'gen2',  label: '2세대', icon: '🟡' },
+  { key: 'shiny', label: '이로치', icon: '✨' },
+  { key: 'evo',   label: '진화표', icon: '🔀' },
 ];
 
 // EVOLUTIONS에서 전체 진화 체인 배열을 구성
@@ -283,8 +284,103 @@ export default function PokedexScreen() {
       {/* 진화표 탭 */}
       {activeTab === 'evo' && <EvolutionTab caughtSet={caughtSet} />}
 
+      {/* 이로치 탭 */}
+      {activeTab === 'shiny' && (() => {
+        const shinySet = new Set(state.shinyPokedex || []);
+        const allIds = [...GEN1_IDS, ...GEN2_IDS];
+        const totalShiny = allIds.length; // 251
+        const caughtShiny = shinySet.size;
+        const pct = Math.round((caughtShiny / totalShiny) * 100);
+        return (
+          <div>
+            {/* 진행률 */}
+            <div style={{
+              background: 'var(--surface, var(--card))',
+              border: '1px solid #00e5ff44', borderRadius: 12,
+              padding: '14px 16px', marginBottom: 14,
+              boxShadow: caughtShiny > 0 ? '0 0 12px rgba(0,229,255,0.2)' : 'none',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#00e5ff' }}>✨ 이로치 도감</span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text2)' }}>{caughtShiny} / {totalShiny} ({pct}%)</span>
+              </div>
+              <div style={{ height: 7, background: 'var(--bg)', borderRadius: 99, overflow: 'hidden', marginBottom: 10 }}>
+                <div style={{
+                  height: '100%', borderRadius: 99, width: `${pct}%`,
+                  background: 'linear-gradient(90deg, #00e5ff, #b388ff)',
+                  transition: 'width 0.4s ease',
+                }} />
+              </div>
+              <RewardRow
+                label="절반 달성" target={126} caught={caughtShiny}
+                rewarded={state.shinyPokedexHalfRewarded}
+                rewardDesc="랜덤 ★3 황금 +20강 포켓몬"
+                rewardColor="#00e5ff"
+                onClaim={() => dispatch({ type: 'CLAIM_SHINY_HALF_REWARD' })}
+              />
+              <RewardRow
+                label="완성 보상" target={251} caught={caughtShiny}
+                rewarded={state.shinyPokedexRewarded}
+                rewardDesc="⭐ 아르세우스 지급"
+                rewardColor="#b388ff"
+                onClaim={() => dispatch({ type: 'CLAIM_SHINY_FULL_REWARD' })}
+              />
+            </div>
+
+            {/* 이로치 도감 그리드 */}
+            {[5,4,3,2,1].map(rarity => {
+              const ids = (ALL_POKEMON_BY_RARITY[rarity] || []).filter(id => [...GEN1_IDS, ...GEN2_IDS].includes(id));
+              if (ids.length === 0) return null;
+              const caughtCount = ids.filter(id => shinySet.has(id)).length;
+              const color = getRarityColor(rarity);
+              return (
+                <div key={rarity} style={{ marginBottom: 20 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ color, fontWeight: 800, fontSize: '0.9rem' }}>{'★'.repeat(rarity)} {['','일반','희귀','영웅','전설','신화'][rarity]}</span>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text2)' }}>{caughtCount} / {ids.length}</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))', gap: 6 }}>
+                    {ids.map(id => {
+                      const isCaught = shinySet.has(id);
+                      return (
+                        <div key={id} style={{
+                          background: isCaught ? 'rgba(0,229,255,0.08)' : 'var(--surface, var(--card))',
+                          border: `1px solid ${isCaught ? '#00e5ff55' : 'var(--border)'}`,
+                          borderRadius: 10, padding: '6px 4px', textAlign: 'center',
+                          opacity: isCaught ? 1 : 0.4,
+                          boxShadow: isCaught ? '0 0 8px rgba(0,229,255,0.3)' : 'none',
+                        }}>
+                          <img
+                            src={isCaught ? getPokemonShinyImageUrl(id) : getPokemonImageUrl(id)}
+                            alt={isCaught ? getPokemonName(id) : '???'}
+                            style={{
+                              width: 48, height: 48, objectFit: 'contain', imageRendering: 'pixelated',
+                              filter: isCaught
+                                ? 'drop-shadow(0 0 4px rgba(0,229,255,0.8))'
+                                : 'brightness(0) contrast(0.3)',
+                            }}
+                          />
+                          <div style={{
+                            fontSize: '0.6rem',
+                            color: isCaught ? '#00e5ff' : 'var(--text2)',
+                            marginTop: 2, fontWeight: isCaught ? 700 : 400,
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}>
+                            {isCaught ? getPokemonName(id) : '???'}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
+
       {/* 도감 탭들 (전체/1세대/2세대) */}
-      {activeTab !== 'evo' && (
+      {activeTab !== 'evo' && activeTab !== 'shiny' && (
         <>
           {(activeTab === 'all' || activeTab === 'gen1') && (
             <GenCompletionCard

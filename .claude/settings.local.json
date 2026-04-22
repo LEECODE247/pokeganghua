@@ -16,7 +16,32 @@
       "Read(//tmp/**)",
       "Bash(rm:*)",
       "Bash(ls *.json *.md)",
-      "Bash(npm --prefix D:/Pokemon_Demo run build)"
+      "Bash(npm --prefix D:/Pokemon_Demo run build)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)",
+      "Bash(gh run:*)",
+      "Bash(git commit:*)",
+      "Bash(node -e ' *)",
+      "Bash(vercel --version)",
+      "Bash(vercel --prod --yes)",
+      "Bash(vercel login *)",
+      "Bash(curl -s http://localhost:5321)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /F /PID 9276 /PID 3092 /PID 15720)",
+      "Bash(node --experimental-vm-modules -e \"import\\('./src/data/pokemonData.js'\\).then\\(m => console.log\\('OK', Object.keys\\(m\\).join\\(','\\)\\)\\).catch\\(e => console.error\\('ERR', e.message\\)\\)\")",
+      "Bash(node --experimental-vm-modules -e \"import\\('./src/components/GymScreen.jsx'\\).then\\(\\(\\) => console.log\\('OK'\\)\\).catch\\(e => console.error\\('ERR:', e.message\\)\\)\")",
+      "Bash(vercel whoami *)",
+      "Bash(vercel *)",
+      "Bash(npx vercel *)",
+      "Bash(npx supabase *)",
+      "Read(//c/Users/LSC/.supabase/**)",
+      "Read(//c/Users/LSC/AppData/Roaming/supabase/**)",
+      "Read(//c/Users/LSC/**)",
+      "Bash(SUPABASE_ACCESS_TOKEN=sbp_af71432b54cbfd281e0f67f3e0def544dd642d2e npx supabase functions deploy save-game --project-ref nusbcqnfeqzshezydozq --use-api)",
+      "Bash(curl *)",
+      "Bash(SUPABASE_ACCESS_TOKEN=sbp_af71432b54cbfd281e0f67f3e0def544dd642d2e npx supabase functions deploy save-game --project-ref nusbcqnfeqzshezydozq --use-api --no-verify-jwt)",
+      "Bash(git checkout *)"
     ]
   }
 }

@@ -44,12 +44,15 @@ const INITIAL_STATE = {
   dailyBattleCount: 0,
   battleResetDate: '',
   pokedex: [],
-  pokedexRewarded: false,   // legacy (하위호환)
-  pokedex1HalfRewarded: false, // 1세대 80마리 보상
-  pokedex1Rewarded: false,     // 1세대 완성 보상
-  pokedex2HalfRewarded: false, // 2세대 50마리 보상
-  pokedex2Rewarded: false,     // 2세대 완성 보상
-  lastEvolution: null,      // { from, to } — 마지막 진화 정보
+  pokedexRewarded: false,
+  pokedex1HalfRewarded: false,
+  pokedex1Rewarded: false,
+  pokedex2HalfRewarded: false,
+  pokedex2Rewarded: false,
+  shinyPokedex: [],
+  shinyPokedexHalfRewarded: false,
+  shinyPokedexRewarded: false,
+  lastEvolution: null,
 };
 
 function gameReducer(state, action) {
@@ -81,6 +84,11 @@ function gameReducer(state, action) {
         ? [...state.pokedex, state.wildPokemon.pokemonId]
         : state.pokedex;
 
+      const newShinyPokedex = captured && state.wildPokemon.isShiny
+        && !state.shinyPokedex.includes(state.wildPokemon.pokemonId)
+        ? [...(state.shinyPokedex || []), state.wildPokemon.pokemonId]
+        : (state.shinyPokedex || []);
+
       return {
         ...state,
         coins: state.coins - ballCfg.cost,
@@ -89,6 +97,7 @@ function gameReducer(state, action) {
         inventory: captured ? [...state.inventory, state.wildPokemon] : state.inventory,
         totalCaptured: captured ? state.totalCaptured + 1 : state.totalCaptured,
         pokedex: newPokedex,
+        shinyPokedex: newShinyPokedex,
       };
     }
 
@@ -357,6 +366,37 @@ function gameReducer(state, action) {
         inventory: [...state.inventory, rewardPokemon],
         pokedex: caught2.has(rewardId) ? state.pokedex : [...state.pokedex, rewardId],
         pokedex2Rewarded: true,
+      };
+    }
+
+    case 'CLAIM_SHINY_HALF_REWARD': {
+      // 이로치 도감 절반(126마리) → 랜덤 ★3 황금 +20강
+      if (state.shinyPokedexHalfRewarded) return state;
+      if ((state.shinyPokedex || []).length < 126) return state;
+      const rarity3Pool = ALL_POKEMON_BY_RARITY[3];
+      const rewardId = rarity3Pool[Math.floor(Math.random() * rarity3Pool.length)];
+      const rewardPokemon = {
+        ...createPokemonInstance(rewardId, 3),
+        sizeGrade: 'S', enhanceLevel: 20, isGolden: true,
+      };
+      return {
+        ...state,
+        inventory: [...state.inventory, rewardPokemon],
+        pokedex: state.pokedex.includes(rewardId) ? state.pokedex : [...state.pokedex, rewardId],
+        shinyPokedexHalfRewarded: true,
+      };
+    }
+
+    case 'CLAIM_SHINY_FULL_REWARD': {
+      // 이로치 도감 완성(251마리) → 아르세우스 지급
+      if (state.shinyPokedexRewarded) return state;
+      if ((state.shinyPokedex || []).length < 251) return state;
+      const arceus = { ...createPokemonInstance(493, 5), sizeGrade: 'S', enhanceLevel: 0 };
+      return {
+        ...state,
+        inventory: [...state.inventory, arceus],
+        pokedex: state.pokedex.includes(493) ? state.pokedex : [...state.pokedex, 493],
+        shinyPokedexRewarded: true,
       };
     }
 

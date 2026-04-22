@@ -1,7 +1,7 @@
 import React from 'react';
 import { useGame } from '../App.jsx';
 import {
-  getPokemonImageUrl, getPokemonName, getRarityStars, getRarityColor,
+  getPokemonImageUrl, getPokemonShinyImageUrl, getPokemonName, getRarityStars, getRarityColor,
   calculatePower, calculateSellPrice, formatCoins,
 } from '../utils/gameUtils.js';
 import { POKEMON_TYPES, TYPE_META } from '../data/pokemonData.js';
@@ -41,15 +41,24 @@ export default function PokemonModal({ pokemon, onClose }) {
 
         <div style={{ position: 'relative', textAlign: 'center' }}>
           <img
-            src={getPokemonImageUrl(pokemon.pokemonId)}
+            src={pokemon.isShiny
+              ? getPokemonShinyImageUrl(pokemon.pokemonId)
+              : getPokemonImageUrl(pokemon.pokemonId)}
             alt={name}
             className="modal-img"
             style={pokemon.isGolden
               ? { animation: 'golden-shimmer 1.5s ease infinite', filter: 'sepia(0.3) brightness(1.3)' }
+              : pokemon.isShiny
+              ? { animation: 'float 3s ease infinite', filter: 'drop-shadow(0 0 14px rgba(0,229,255,0.9)) brightness(1.1)' }
               : { animation: 'float 3s ease infinite' }}
           />
+          {pokemon.isShiny && (
+            <div className="golden-badge" style={{ position: 'absolute', top: 0, right: '50%', transform: 'translateX(80px)', background: 'linear-gradient(135deg,#00e5ff,#b388ff)', color: '#000' }}>
+              ✦ 이로치
+            </div>
+          )}
           {pokemon.isGolden && (
-            <div className="golden-badge" style={{ position: 'absolute', top: 0, right: '50%', transform: 'translateX(80px)' }}>
+            <div className="golden-badge" style={{ position: 'absolute', top: pokemon.isShiny ? 30 : 0, right: '50%', transform: 'translateX(80px)' }}>
               ✨ 황금
             </div>
           )}
@@ -94,6 +103,7 @@ export default function PokemonModal({ pokemon, onClose }) {
         {/* 판매가 */}
         <div className="modal-sell-price">
           🪙 판매가: {formatCoins(sellPrice)}
+          {pokemon.isShiny  && <span style={{ marginLeft: 6, color: '#00e5ff', fontSize: '0.8rem' }}>×1.5 이로치 보너스!</span>}
           {pokemon.isGolden && <span style={{ marginLeft: 6, color: 'var(--gold)', fontSize: '0.8rem' }}>×5 황금 보너스!</span>}
         </div>
 

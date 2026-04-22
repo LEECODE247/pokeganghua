@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useGame } from '../App.jsx';
 import {
-  getPokemonImageUrl, getPokemonName, getRarityStars, getRarityColor,
+  getPokemonImageUrl, getPokemonShinyImageUrl, getPokemonName, getRarityStars, getRarityColor,
   calculatePower, calculateSellPrice, formatCoins,
 } from '../utils/gameUtils.js';
 import { POKEMON_TYPES, TYPE_META } from '../data/pokemonData.js';
@@ -114,23 +114,37 @@ export default function InventoryScreen() {
               ? { border: '2px solid #FF6B00', boxShadow: '0 0 12px rgba(255,107,0,0.5)' }
               : !pokemon.isGolden && isLegendary
               ? { border: '2px solid #e040fb', boxShadow: '0 0 8px rgba(224,64,251,0.3)' }
+              : pokemon.isShiny
+              ? { border: '2px solid #00e5ff', boxShadow: '0 0 10px rgba(0,229,255,0.5)' }
               : {};
             return (
               <div
                 key={pokemon.instanceId}
-                className={`inv-card${pokemon.isGolden ? ' golden' : ''}`}
+                className={`inv-card${pokemon.isGolden ? ' golden' : ''}${pokemon.isShiny ? ' shiny' : ''}`}
                 style={cardStyle}
                 onClick={() => setSelectedPokemon(pokemon)}
               >
                 {pokemon.enhanceLevel > 0 && (
                   <div className="enhance-level-badge">+{pokemon.enhanceLevel}</div>
                 )}
+                {pokemon.isShiny && (
+                  <div style={{
+                    position: 'absolute', top: 4, left: 4,
+                    fontSize: '0.5rem', fontWeight: 900,
+                    color: '#00e5ff', textShadow: '0 0 6px #00e5ff',
+                    lineHeight: 1,
+                  }}>✦이로치</div>
+                )}
                 <img
-                  src={getPokemonImageUrl(pokemon.pokemonId)}
+                  src={pokemon.isShiny
+                    ? getPokemonShinyImageUrl(pokemon.pokemonId)
+                    : getPokemonImageUrl(pokemon.pokemonId)}
                   alt={name}
                   className="inv-img"
                   style={pokemon.isGolden
                     ? { filter: 'sepia(0.3) brightness(1.4) drop-shadow(0 0 6px rgba(255,214,0,0.8))' }
+                    : pokemon.isShiny
+                    ? { filter: 'drop-shadow(0 0 8px rgba(0,229,255,0.8)) brightness(1.05)' }
                     : isMythical
                     ? { filter: 'drop-shadow(0 0 8px rgba(255,107,0,0.8))' }
                     : isLegendary

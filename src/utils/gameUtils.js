@@ -24,6 +24,10 @@ export function getPokemonImageUrl(id) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
 }
 
+export function getPokemonShinyImageUrl(id) {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${id}.png`;
+}
+
 export function getPokemonName(id) {
   return POKEMON_NAMES[id] || `포켓몬 #${id}`;
 }
@@ -50,6 +54,7 @@ export function createPokemonInstance(pokemonId, rarity) {
   const sizeGrade = sizeGrades[Math.floor(Math.random() * 4)];
   const size = Math.floor(Math.random() * 100) + 1;
   const isGolden = Math.random() < 0.005;
+  const isShiny  = Math.random() < 0.01;
   const gender = Math.random() < 0.5 ? '♂' : '♀';
 
   return {
@@ -61,32 +66,33 @@ export function createPokemonInstance(pokemonId, rarity) {
     sizeGrade,
     enhanceLevel: 0,
     isGolden,
+    isShiny,
     capturedAt: Date.now(),
   };
 }
 
 export function calculatePower(pokemon) {
-  // 포켓몬별 개별 기준 전투력 → 없으면 희귀도 기본값
   const rarityDefault = { 1: 200, 2: 750, 3: 2600, 4: 12000, 5: 40000 }[pokemon.rarity] || 200;
   const rarityBase = POKEMON_POWER_BASE[pokemon.pokemonId] ?? rarityDefault;
-  const sizeMult = { S: 1.2, A: 1.1, B: 1.0, C: 0.9 }[pokemon.sizeGrade] || 1.0;
+  const sizeMult  = { S: 1.2, A: 1.1, B: 1.0, C: 0.9 }[pokemon.sizeGrade] || 1.0;
+  const shinyMult = pokemon.isShiny ? 1.5 : 1;
   const lv = pokemon.enhanceLevel;
-  // +14까지: 선형 증가 / +15부터: 성공마다 전투력 2배
   const enhanceMult = lv <= 14
     ? 1 + lv * 0.2
-    : (1 + 14 * 0.2) * Math.pow(2, lv - 14); // 3.8 × 2^(lv-14)
-  return Math.floor(rarityBase * sizeMult * enhanceMult);
+    : (1 + 14 * 0.2) * Math.pow(2, lv - 14);
+  return Math.floor(rarityBase * sizeMult * enhanceMult * shinyMult);
 }
 
 export function calculateSellPrice(pokemon) {
   const basePrice = { 1: 200, 2: 3000, 3: 25000, 4: 100000, 5: 500000 }[pokemon.rarity] || 200;
-  const sizeMult = { S: 2.0, A: 1.5, B: 1.0, C: 0.7 }[pokemon.sizeGrade];
+  const sizeMult  = { S: 2.0, A: 1.5, B: 1.0, C: 0.7 }[pokemon.sizeGrade];
   const lv = pokemon.enhanceLevel;
   const enhanceMult = lv <= 14
     ? 1 + lv * 0.2
-    : (1 + 14 * 0.2) * Math.pow(2, lv - 14); // +15부터 2배씩
+    : (1 + 14 * 0.2) * Math.pow(2, lv - 14);
   const goldenMult = pokemon.isGolden ? 5 : 1;
-  return Math.floor(basePrice * sizeMult * enhanceMult * goldenMult);
+  const shinyMult  = pokemon.isShiny  ? 1.5 : 1;
+  return Math.floor(basePrice * sizeMult * enhanceMult * goldenMult * shinyMult);
 }
 
 export function getEnhanceConfig(currentLevel) {
