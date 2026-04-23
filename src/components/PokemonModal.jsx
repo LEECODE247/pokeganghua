@@ -15,14 +15,15 @@ export default function PokemonModal({ pokemon, onClose }) {
   const power = calculatePower(pokemon);
   const sellPrice = calculateSellPrice(pokemon);
   const fragBonus = getSellFragmentBonus(pokemon);
-  const hasLegendaryBonus = (pokemon.rarity === 4 || pokemon.rarity === 5) && pokemon.enhanceLevel >= 15;
+  const isArceus = pokemon.pokemonId === 493;
+  const hasLegendaryBonus = !isArceus && pokemon.rarity === 4 && pokemon.enhanceLevel >= 15;
   const name = getPokemonName(pokemon.pokemonId);
 
   function handleSell() {
-    const legendaryMsg = hasLegendaryBonus ? ' + 💎100~2,000 (랜덤)' : '';
+    const legendaryMsg = isArceus ? ' + 💎5,000' : hasLegendaryBonus ? ' + 💎100~2,000 (랜덤)' : '';
     if (confirm(`${name}을(를) 🪙${formatCoins(sellPrice)}${fragBonus > 0 ? ` + 💎${fragBonus}` : ''}${legendaryMsg}에 판매할까요?`)) {
       dispatch({ type: 'SELL_POKEMON', pokemonId: pokemon.instanceId });
-      setSoldInfo({ coins: sellPrice, frags: fragBonus, hasLegendaryBonus, name });
+      setSoldInfo({ coins: sellPrice, frags: fragBonus, hasLegendaryBonus, isArceus, name });
     }
   }
 
@@ -48,9 +49,14 @@ export default function PokemonModal({ pokemon, onClose }) {
                 💎 {soldInfo.frags} 파편
               </div>
             )}
+            {soldInfo.isArceus && (
+              <div style={{ background: 'rgba(255,107,0,0.1)', border: '1px solid #FF6B00', borderRadius: 10, padding: '10px 16px', fontSize: '0.9rem', fontWeight: 800, color: '#FF6B00' }}>
+                🌟 아르세우스 판매 보너스 💎5,000 지급!
+              </div>
+            )}
             {soldInfo.hasLegendaryBonus && (
               <div style={{ background: 'rgba(224,64,251,0.1)', border: '1px solid #e040fb', borderRadius: 10, padding: '10px 16px', fontSize: '0.9rem', fontWeight: 800, color: '#e040fb' }}>
-                ⭐ 전설·신화 +15 보너스 💎100~2,000 지급!
+                ⭐ 전설 +15 보너스 💎100~2,000 지급!
               </div>
             )}
           </div>
@@ -135,6 +141,7 @@ export default function PokemonModal({ pokemon, onClose }) {
         <div className="modal-sell-price">
           🪙 판매가: {formatCoins(sellPrice)}
           {fragBonus > 0 && <span style={{ marginLeft: 6, color: '#42a5f5', fontSize: '0.8rem' }}>+💎{fragBonus}</span>}
+          {isArceus && <span style={{ marginLeft: 6, color: '#FF6B00', fontSize: '0.8rem' }}>+💎5,000 고정!</span>}
           {hasLegendaryBonus && <span style={{ marginLeft: 6, color: '#e040fb', fontSize: '0.8rem' }}>+💎100~2,000 랜덤</span>}
           {pokemon.isShiny  && <span style={{ marginLeft: 6, color: '#00e5ff', fontSize: '0.8rem' }}>×1.5 이로치!</span>}
           {pokemon.isGolden && <span style={{ marginLeft: 6, color: 'var(--gold)', fontSize: '0.8rem' }}>×5 황금!</span>}
