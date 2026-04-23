@@ -1,6 +1,9 @@
 import { POKEMON_NAMES, ALL_POKEMON_BY_RARITY, ENHANCE_CONFIG, POKEMON_POWER_BASE, POKEMON_TYPES, TYPE_META, TYPE_CHART, BALL_CONFIG } from '../data/pokemonData.js';
 import { WILD_EXCLUDED } from '../data/evolutionData.js';
 
+export const SELL_ENHANCE_BONUS = { 10:10, 11:40, 12:60, 13:80, 14:100, 15:120, 16:140, 17:160, 18:180, 19:200, 20:200 };
+export function getSellFragmentBonus(pokemon) { return SELL_ENHANCE_BONUS[pokemon?.enhanceLevel] ?? 0; }
+
 let _instanceCounter = 0;
 
 // 포획 결과 사전 계산 (애니메이션과 실제 state 반영 시점 분리용)

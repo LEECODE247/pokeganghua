@@ -1,5 +1,5 @@
 import React, { useReducer, useEffect, useState, useRef, createContext, useContext, Component } from 'react';
-import { generateWildPokemon, calculateSellPrice, getEnhanceRate, getEnhanceFailEffect, getEnhanceCost, createPokemonInstance } from './utils/gameUtils.js';
+import { generateWildPokemon, calculateSellPrice, getEnhanceRate, getEnhanceFailEffect, getEnhanceCost, createPokemonInstance, SELL_ENHANCE_BONUS } from './utils/gameUtils.js';
 import { BALL_CONFIG, POKEMON_NAMES, ALL_POKEMON_BY_RARITY, GEN1_IDS, GEN2_IDS, POKEMON_RARITY_MAP, GYM_CONFIG } from './data/pokemonData.js';
 import { EVOLUTIONS } from './data/evolutionData.js';
 import { loadGameState, saveGameState } from './supabase.js';
@@ -54,9 +54,6 @@ const INITIAL_STATE = {
   shinyPokedexRewarded: false,
   lastEvolution: null,
 };
-
-// 강화 레벨별 판매 파편 보상 (+10~+20)
-const SELL_ENHANCE_BONUS = { 10:10, 11:40, 12:60, 13:80, 14:100, 15:120, 16:140, 17:160, 18:180, 19:200, 20:200 };
 
 // 이로치 도감 대상: 1~3성 1·2세대 포켓몬
 const GEN_ALL_SET = new Set([...GEN1_IDS, ...GEN2_IDS]);

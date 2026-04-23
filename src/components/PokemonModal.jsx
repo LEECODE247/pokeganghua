@@ -1,24 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useGame } from '../App.jsx';
 import {
   getPokemonImageUrl, getPokemonShinyImageUrl, getPokemonName, getRarityStars, getRarityColor,
-  calculatePower, calculateSellPrice, formatCoins,
+  calculatePower, calculateSellPrice, formatCoins, getSellFragmentBonus,
 } from '../utils/gameUtils.js';
 import { POKEMON_TYPES, TYPE_META } from '../data/pokemonData.js';
 
 export default function PokemonModal({ pokemon, onClose }) {
   const { dispatch } = useGame();
+  const [soldInfo, setSoldInfo] = useState(null);
 
   if (!pokemon) return null;
 
   const power = calculatePower(pokemon);
   const sellPrice = calculateSellPrice(pokemon);
+  const fragBonus = getSellFragmentBonus(pokemon);
   const name = getPokemonName(pokemon.pokemonId);
 
   function handleSell() {
-    if (confirm(`${name}을(를) 🪙${formatCoins(sellPrice)}에 판매할까요?`)) {
+    if (confirm(`${name}을(를) 🪙${formatCoins(sellPrice)}${fragBonus > 0 ? ` + 💎${fragBonus}` : ''}에 판매할까요?`)) {
       dispatch({ type: 'SELL_POKEMON', pokemonId: pokemon.instanceId });
-      onClose();
+      setSoldInfo({ coins: sellPrice, frags: fragBonus, name });
     }
   }
 
@@ -28,6 +30,28 @@ export default function PokemonModal({ pokemon, onClose }) {
   }
 
   const rarityColor = getRarityColor(pokemon.rarity);
+
+  if (soldInfo) {
+    return (
+      <div className="modal-backdrop" onClick={onClose}>
+        <div className="modal" onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '2rem', marginBottom: 8 }}>💸</div>
+          <div style={{ fontWeight: 900, fontSize: '1.1rem', marginBottom: 16 }}>{soldInfo.name} 판매 완료!</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+            <div style={{ background: 'rgba(255,214,0,0.1)', border: '1px solid var(--gold)', borderRadius: 10, padding: '10px 16px', fontSize: '1rem', fontWeight: 800, color: 'var(--gold)' }}>
+              🪙 {formatCoins(soldInfo.coins)}
+            </div>
+            {soldInfo.frags > 0 && (
+              <div style={{ background: 'rgba(100,181,246,0.1)', border: '1px solid #42a5f5', borderRadius: 10, padding: '10px 16px', fontSize: '1rem', fontWeight: 800, color: '#42a5f5' }}>
+                💎 {soldInfo.frags} 파편
+              </div>
+            )}
+          </div>
+          <button className="btn btn-ghost btn-full" onClick={onClose}>확인</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -103,8 +127,9 @@ export default function PokemonModal({ pokemon, onClose }) {
         {/* 판매가 */}
         <div className="modal-sell-price">
           🪙 판매가: {formatCoins(sellPrice)}
-          {pokemon.isShiny  && <span style={{ marginLeft: 6, color: '#00e5ff', fontSize: '0.8rem' }}>×1.5 이로치 보너스!</span>}
-          {pokemon.isGolden && <span style={{ marginLeft: 6, color: 'var(--gold)', fontSize: '0.8rem' }}>×5 황금 보너스!</span>}
+          {fragBonus > 0 && <span style={{ marginLeft: 6, color: '#42a5f5', fontSize: '0.8rem' }}>+💎{fragBonus} 파편</span>}
+          {pokemon.isShiny  && <span style={{ marginLeft: 6, color: '#00e5ff', fontSize: '0.8rem' }}>×1.5 이로치!</span>}
+          {pokemon.isGolden && <span style={{ marginLeft: 6, color: 'var(--gold)', fontSize: '0.8rem' }}>×5 황금!</span>}
         </div>
 
         {/* 액션 */}
@@ -113,7 +138,7 @@ export default function PokemonModal({ pokemon, onClose }) {
             ⚗️ 강화 (+{pokemon.enhanceLevel} → +{pokemon.enhanceLevel + 1})
           </button>
           <button className="btn btn-ghost btn-full" onClick={handleSell} style={{ borderColor: 'var(--fail)', color: 'var(--fail)' }}>
-            💸 판매 🪙{formatCoins(sellPrice)}
+            💸 판매 🪙{formatCoins(sellPrice)}{fragBonus > 0 ? ` +💎${fragBonus}` : ''}
           </button>
           <button className="btn btn-ghost btn-full" onClick={onClose}>
             닫기
