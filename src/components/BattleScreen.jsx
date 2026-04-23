@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useGame } from '../App.jsx';
 import {
-  getPokemonImageUrl, getPokemonName, getRarityColor, getRarityStars,
+  getPokemonImageUrl, getPokemonShinyImageUrl, getPokemonName, getRarityColor, getRarityStars,
   calculatePower, calculateSellPrice, formatCoins, getTeamSynergies, SYNERGY_CATALOG,
   getTypeAdvantage,
 } from '../utils/gameUtils.js';
@@ -724,13 +724,21 @@ export default function BattleScreen() {
                 : (
                   <div className="inv-grid">
                     {getAvailableForSlot(selectingSlot).map(p => (
-                      <div key={p.instanceId} className={`inv-card${p.isGolden ? ' golden' : ''}`}
+                      <div key={p.instanceId} className={`inv-card${p.isGolden ? ' golden' : ''}${p.isShiny ? ' shiny' : ''}`}
                         style={{ cursor: 'pointer' }}
                         onClick={() => { dispatch({ type: 'SET_BATTLE_SLOT', slot: selectingSlot, pokemonId: p.instanceId }); setSelectingSlot(null); }}
                       >
                         {p.enhanceLevel > 0 && <div className="enhance-level-badge">+{p.enhanceLevel}</div>}
-                        <img src={getPokemonImageUrl(p.pokemonId)} alt="" className="inv-img" />
+                        {p.isShiny && <div style={{ position:'absolute', top:4, left:4, fontSize:'0.5rem', fontWeight:900, color:'#00e5ff', textShadow:'0 0 6px #00e5ff', lineHeight:1 }}>✦이로치</div>}
+                        <img src={p.isShiny ? getPokemonShinyImageUrl(p.pokemonId) : getPokemonImageUrl(p.pokemonId)} alt="" className="inv-img"
+                          style={p.isShiny ? { filter: 'drop-shadow(0 0 8px rgba(0,229,255,0.8))' } : {}} />
                         <div className="inv-name">{getPokemonName(p.pokemonId)}</div>
+                        <div style={{ display:'flex', justifyContent:'center', gap:2, marginBottom:2 }}>
+                          {(POKEMON_TYPES[p.pokemonId] || ['normal']).map(t => {
+                            const meta = TYPE_META[t] || TYPE_META.normal;
+                            return <span key={t} style={{ background:meta.color, color:'#fff', fontSize:'0.48rem', fontWeight:800, padding:'1px 5px', borderRadius:10 }}>{meta.label}</span>;
+                          })}
+                        </div>
                         <div style={{ color: getRarityColor(p.rarity), fontSize: '0.65rem' }}>{'★'.repeat(p.rarity)}</div>
                         <div className="inv-power">⚡{calculatePower(p).toLocaleString()}</div>
                       </div>

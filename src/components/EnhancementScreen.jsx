@@ -173,7 +173,8 @@ export default function EnhancementScreen() {
                       style={{ cursor: atMax ? 'default' : 'pointer', opacity: atMax ? 0.5 : 1 }}
                     >
                       {lvl > 0 && <div className="enhance-level-badge">+{lvl}</div>}
-                      <img src={getPokemonImageUrl(p.pokemonId)} alt="" className="inv-img" />
+                      <img src={p.isShiny ? getPokemonShinyImageUrl(p.pokemonId) : getPokemonImageUrl(p.pokemonId)} alt="" className="inv-img"
+                        style={p.isShiny ? { filter: 'drop-shadow(0 0 6px rgba(0,229,255,0.8))' } : {}} />
                       <div className="inv-name">{getPokemonName(p.pokemonId)}</div>
                       <div style={{ color: getRarityColor(p.rarity), fontSize: '0.65rem' }}>{'★'.repeat(p.rarity)}</div>
                       {atMax && <div style={{ fontSize: '0.6rem', color: 'var(--gold)' }}>최대</div>}
@@ -237,15 +238,19 @@ export default function EnhancementScreen() {
       <div className="enhance-main">
         {/* 포켓몬 카드 */}
         <div className={`enhance-pokemon-card ${cardAnim}`}
-          style={pokemon.isGolden ? { borderColor: 'var(--gold)' } : {}}>
+          style={pokemon.isGolden ? { borderColor: 'var(--gold)' } : pokemon.isShiny ? { borderColor: '#00e5ff' } : {}}>
           <div style={{ position: 'relative' }}>
             <img
-              src={getPokemonImageUrl(pokemon.pokemonId)}
+              src={pokemon.isShiny ? getPokemonShinyImageUrl(pokemon.pokemonId) : getPokemonImageUrl(pokemon.pokemonId)}
               alt={getPokemonName(pokemon.pokemonId)}
               style={{
                 width: 160, height: 160, objectFit: 'contain', imageRendering: 'pixelated',
                 animation: isEnhancing ? 'pulse 0.3s ease infinite alternate' : 'float 3s ease infinite',
-                filter: pokemon.isGolden ? 'sepia(0.3) brightness(1.3) drop-shadow(0 0 10px rgba(255,214,0,0.8))' : 'drop-shadow(0 0 10px rgba(255,255,255,0.1))',
+                filter: pokemon.isGolden
+                  ? 'sepia(0.3) brightness(1.3) drop-shadow(0 0 10px rgba(255,214,0,0.8))'
+                  : pokemon.isShiny
+                  ? 'drop-shadow(0 0 14px rgba(0,229,255,0.9)) brightness(1.1)'
+                  : 'drop-shadow(0 0 10px rgba(255,255,255,0.1))',
               }}
             />
           </div>

@@ -109,6 +109,7 @@ export default function CaptureScreen() {
   const isMythical  = wildPokemon?.rarity === 5;
   const sellPrice = wildPokemon ? calculateSellPrice(wildPokemon) : 0;
   const isInPokedex = wildPokemon ? state.pokedex.includes(wildPokemon.pokemonId) : false;
+  const isInShinyPokedex = wildPokemon?.isShiny ? (state.shinyPokedex || []).includes(wildPokemon.pokemonId) : false;
 
   const localResult = localResultRef.current;
   const imgAnimClass = phase === PHASE.APPEARING ? 'anim-bounce'
@@ -154,17 +155,29 @@ export default function CaptureScreen() {
             }
           >
             {/* 도감 등록 여부 뱃지 (왼쪽 상단) */}
-            <div style={{
-              position: 'absolute', top: 6, left: 8,
-              background: isInPokedex ? 'rgba(76,175,80,0.18)' : 'rgba(255,214,0,0.15)',
-              border: `1px solid ${isInPokedex ? '#4caf50' : '#ffd700'}`,
-              color: isInPokedex ? '#4caf50' : '#ffd700',
-              fontSize: '0.6rem', fontWeight: 900,
-              padding: '2px 7px', borderRadius: 10,
-              letterSpacing: '0.02em',
-            }}>
-              {isInPokedex ? '✓ 도감등록' : '★ 미등록'}
-            </div>
+            {wildPokemon.isShiny ? (
+              <div style={{
+                position: 'absolute', top: 6, left: 8,
+                background: isInShinyPokedex ? 'rgba(0,229,255,0.15)' : 'rgba(255,214,0,0.15)',
+                border: `1px solid ${isInShinyPokedex ? '#00e5ff' : '#ffd700'}`,
+                color: isInShinyPokedex ? '#00e5ff' : '#ffd700',
+                fontSize: '0.6rem', fontWeight: 900,
+                padding: '2px 7px', borderRadius: 10,
+              }}>
+                {isInShinyPokedex ? '✦ 이로치등록' : '✦ 이로치미등록'}
+              </div>
+            ) : (
+              <div style={{
+                position: 'absolute', top: 6, left: 8,
+                background: isInPokedex ? 'rgba(76,175,80,0.18)' : 'rgba(255,214,0,0.15)',
+                border: `1px solid ${isInPokedex ? '#4caf50' : '#ffd700'}`,
+                color: isInPokedex ? '#4caf50' : '#ffd700',
+                fontSize: '0.6rem', fontWeight: 900,
+                padding: '2px 7px', borderRadius: 10,
+              }}>
+                {isInPokedex ? '✓ 도감등록' : '★ 미등록'}
+              </div>
+            )}
 
             {wildPokemon.isShiny && (
               <div className="golden-badge" style={{ background: 'linear-gradient(135deg,#00e5ff,#b388ff)', color: '#000' }}>✨ 이로치!</div>
