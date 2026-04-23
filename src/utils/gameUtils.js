@@ -54,7 +54,7 @@ export function createPokemonInstance(pokemonId, rarity) {
   const sizeGrade = sizeGrades[Math.floor(Math.random() * 4)];
   const size = Math.floor(Math.random() * 100) + 1;
   const isGolden = Math.random() < 0.005;
-  const isShiny  = Math.random() < 0.01;
+  const isShiny  = Math.random() < 0.05;
   const gender = Math.random() < 0.5 ? '♂' : '♀';
 
   return {
