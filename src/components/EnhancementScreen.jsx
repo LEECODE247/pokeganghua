@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useGame } from '../App.jsx';
 import {
-  getPokemonImageUrl, getPokemonName, getRarityStars, getRarityColor,
+  getPokemonImageUrl, getPokemonShinyImageUrl, getPokemonName, getRarityStars, getRarityColor,
   calculatePower, calculateSellPrice, getEnhanceRate, getEnhanceCost,
   getEnhanceFailEffect, formatCoins,
 } from '../utils/gameUtils.js';
 import { EVOLUTIONS } from '../data/evolutionData.js';
 
 // ── 진화 연출 오버레이 ────────────────────────────────────────────────────────
-function EvolutionOverlay({ from, to, onClose }) {
+function EvolutionOverlay({ from, to, isShiny, onClose }) {
   const [phase, setPhase] = useState(0);
   // 0: 기존 포켓몬 실루엣 → 1: 화이트 플래시 → 2: 새 포켓몬 등장 → 3: 텍스트
 
@@ -43,7 +43,8 @@ function EvolutionOverlay({ from, to, onClose }) {
     >
       {/* Phase 0: 기존 포켓몬 실루엣 */}
       {phase === 0 && (
-        <img src={getPokemonImageUrl(from)} className="evo-old-img" alt="" />
+        <img src={isShiny ? getPokemonShinyImageUrl(from) : getPokemonImageUrl(from)} className="evo-old-img" alt=""
+          style={isShiny ? { filter: 'drop-shadow(0 0 14px rgba(0,229,255,0.9)) brightness(1.1)' } : {}} />
       )}
 
       {/* Phase 2+: 파티클 + 새 포켓몬 */}
@@ -63,15 +64,16 @@ function EvolutionOverlay({ from, to, onClose }) {
               }}
             />
           ))}
-          <img src={getPokemonImageUrl(to)} className="evo-new-img" alt="" />
+          <img src={isShiny ? getPokemonShinyImageUrl(to) : getPokemonImageUrl(to)} className="evo-new-img" alt=""
+            style={isShiny ? { filter: 'drop-shadow(0 0 14px rgba(0,229,255,0.9)) brightness(1.1)' } : {}} />
         </>
       )}
 
       {/* Phase 3: 텍스트 */}
       {phase >= 3 && (
         <div className="evo-text-group">
-          <div className="evo-label">✨ 진화!</div>
-          <div className="evo-names">
+          <div className="evo-label">{isShiny ? '✦ 이로치 진화!' : '✨ 진화!'}</div>
+          <div className="evo-names" style={isShiny ? { color: '#00e5ff' } : {}}>
             {getPokemonName(from)}&nbsp;&rarr;&nbsp;{getPokemonName(to)}
           </div>
           <div className="evo-tap-hint">탭하여 닫기</div>
@@ -217,6 +219,7 @@ export default function EnhancementScreen() {
         <EvolutionOverlay
           from={state.lastEvolution.from}
           to={state.lastEvolution.to}
+          isShiny={state.lastEvolution.isShiny}
           onClose={() => dispatch({ type: 'CLEAR_ENHANCE_RESULT' })}
         />
       )}

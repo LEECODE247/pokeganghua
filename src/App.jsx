@@ -55,6 +55,9 @@ const INITIAL_STATE = {
   lastEvolution: null,
 };
 
+// 강화 레벨별 판매 파편 보상 (+10~+20)
+const SELL_ENHANCE_BONUS = { 10:10, 11:40, 12:60, 13:80, 14:100, 15:120, 16:140, 17:160, 18:180, 19:200, 20:200 };
+
 // 이로치 도감 대상: 1~3성 1·2세대 포켓몬
 const GEN_ALL_SET = new Set([...GEN1_IDS, ...GEN2_IDS]);
 const SHINY_TARGET_IDS = new Set(
@@ -146,7 +149,7 @@ function gameReducer(state, action) {
           if (!state.pokedex.includes(targetId)) {
             newFragments = state.fragments; // fragments 유지 (아래서 덮어쓰기 방지)
           }
-          evolutionInfo = { from: pokemon.pokemonId, to: targetId };
+          evolutionInfo = { from: pokemon.pokemonId, to: targetId, isShiny: pokemon.isShiny };
           result = 'evolved';
         } else {
           result = 'success';
@@ -166,7 +169,8 @@ function gameReducer(state, action) {
           } else {
             result = 'destroyed';
             newInventory = newInventory.filter(p => p.instanceId !== pokemon.instanceId);
-            newFragments += pokemon.enhanceLevel * 15;
+            const destroyBonus = SELL_ENHANCE_BONUS[pokemon.enhanceLevel] ?? 0;
+            newFragments += destroyBonus * 2; // 15강 이상 파괴 시 판매 파편의 2배
           }
         } else if (failEffect === 'minus1') {
           result = 'decreased';
@@ -184,6 +188,10 @@ function gameReducer(state, action) {
         ? [...state.pokedex, evolutionInfo.to]
         : state.pokedex;
 
+      const newShinyPokedexAfterEvo = evolutionInfo?.isShiny && !(state.shinyPokedex || []).includes(evolutionInfo.to)
+        ? [...(state.shinyPokedex || []), evolutionInfo.to]
+        : (state.shinyPokedex || []);
+
       return {
         ...state,
         coins: state.coins - cost,
@@ -195,6 +203,7 @@ function gameReducer(state, action) {
         totalEnhanced: state.totalEnhanced + 1,
         lastEvolution: evolutionInfo ?? state.lastEvolution,
         pokedex: newPokedex,
+        shinyPokedex: newShinyPokedexAfterEvo,
       };
     }
 
@@ -245,9 +254,11 @@ function gameReducer(state, action) {
       if (!pokemon) return state;
       const newGymPokemonCooldowns = { ...state.gymPokemonCooldowns };
       delete newGymPokemonCooldowns[action.pokemonId];
+      const sellFragmentBonus = SELL_ENHANCE_BONUS[pokemon.enhanceLevel] ?? 0;
       return {
         ...state,
         coins: state.coins + calculateSellPrice(pokemon),
+        fragments: state.fragments + sellFragmentBonus,
         inventory: state.inventory.filter(p => p.instanceId !== action.pokemonId),
         enhancingPokemonId:   state.enhancingPokemonId   === action.pokemonId ? null : state.enhancingPokemonId,
         gymSelectedPokemonId: state.gymSelectedPokemonId === action.pokemonId ? null : state.gymSelectedPokemonId,
@@ -259,15 +270,16 @@ function gameReducer(state, action) {
 
     case 'SELL_BULK': {
       const idSet      = new Set(action.pokemonIds);
-      const totalCoins = state.inventory
-        .filter(p => idSet.has(p.instanceId))
-        .reduce((sum, p) => sum + calculateSellPrice(p), 0);
+      const soldPokemon = state.inventory.filter(p => idSet.has(p.instanceId));
+      const totalCoins = soldPokemon.reduce((sum, p) => sum + calculateSellPrice(p), 0);
+      const totalFragBonus = soldPokemon.reduce((sum, p) => sum + (SELL_ENHANCE_BONUS[p.enhanceLevel] ?? 0), 0);
       const newGymPokemonCooldowns2 = Object.fromEntries(
         Object.entries(state.gymPokemonCooldowns).filter(([k]) => !idSet.has(k))
       );
       return {
         ...state,
         coins: state.coins + totalCoins,
+        fragments: state.fragments + totalFragBonus,
         inventory: state.inventory.filter(p => !idSet.has(p.instanceId)),
         enhancingPokemonId:   idSet.has(state.enhancingPokemonId)   ? null : state.enhancingPokemonId,
         gymSelectedPokemonId: idSet.has(state.gymSelectedPokemonId) ? null : state.gymSelectedPokemonId,
