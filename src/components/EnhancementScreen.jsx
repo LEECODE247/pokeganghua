@@ -134,6 +134,16 @@ export default function EnhancementScreen() {
     }, 300);
   }
 
+  useEffect(() => {
+    function handleKey(e) {
+      if (e.code !== 'Space') return;
+      e.preventDefault();
+      handleEnhance();
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [pokemon, isEnhancing, useShield, state.coins]);
+
   function getSuccessRateClass(rate) {
     if (rate >= 1) return 'rate-100';
     if (rate >= 0.7) return 'rate-high';
