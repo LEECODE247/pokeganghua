@@ -253,7 +253,7 @@ function gameReducer(state, action) {
       delete newGymPokemonCooldowns[action.pokemonId];
       const sellFragmentBonus = SELL_ENHANCE_BONUS[pokemon.enhanceLevel] ?? 0;
       const isLegendaryBonus = (pokemon.rarity === 4 || pokemon.rarity === 5) && pokemon.enhanceLevel >= 15;
-      const legendaryFragBonus = isLegendaryBonus ? (Math.floor(Math.random() * 4001) + 1000) : 0;
+      const legendaryFragBonus = isLegendaryBonus ? (Math.floor(Math.random() * 1901) + 100) : 0;
       return {
         ...state,
         coins: state.coins + calculateSellPrice(pokemon),
@@ -274,7 +274,7 @@ function gameReducer(state, action) {
       const totalFragBonus = soldPokemon.reduce((sum, p) => {
         const base = SELL_ENHANCE_BONUS[p.enhanceLevel] ?? 0;
         const legendary = (p.rarity === 4 || p.rarity === 5) && p.enhanceLevel >= 15
-          ? (Math.floor(Math.random() * 4001) + 1000) : 0;
+          ? (Math.floor(Math.random() * 1901) + 100) : 0;
         return sum + base + legendary;
       }, 0);
       const newGymPokemonCooldowns2 = Object.fromEntries(
