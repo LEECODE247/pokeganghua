@@ -93,6 +93,16 @@ export default function CaptureScreen() {
     dispatch({ type: 'GENERATE_WILD_POKEMON' });
   }
 
+  useEffect(() => {
+    function handleKey(e) {
+      if (e.code !== 'Space') return;
+      e.preventDefault();
+      if (phase === PHASE.READY || phase === PHASE.RESULT) nextJourney();
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [phase]);
+
   function sellCaptured() {
     if (!wildPokemon || justSold) return;
     dispatch({ type: 'SELL_POKEMON', pokemonId: wildPokemon.instanceId });
