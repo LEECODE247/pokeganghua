@@ -57,7 +57,8 @@ export function createPokemonInstance(pokemonId, rarity) {
   const sizeGrade = sizeGrades[Math.floor(Math.random() * 4)];
   const size = Math.floor(Math.random() * 100) + 1;
   const isGolden = Math.random() < 0.005;
-  const isShiny  = Math.random() < 0.05;
+  const shinyRate = pokemonId === 493 ? 0.005 : 0.05; // 아르세우스는 0.5%, 일반 5%
+  const isShiny  = Math.random() < shinyRate;
   const gender = Math.random() < 0.5 ? '♂' : '♀';
 
   return {

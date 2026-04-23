@@ -15,6 +15,7 @@ const UPDATES = [
         section: '✨ 이로치 출현 확률이 대폭 상향됩니다!',
         items: [
           '이로치 포켓몬 출현 확률이 기존 1%에서 5%로 상향 조정되었습니다.',
+          '단, 이로치 아르세우스는 0.5% 확률로 하향 조정됩니다.',
           '더 자주 이로치 포켓몬을 만날 수 있으니 이로치 도감 완성에 도전해 보세요!',
           '이로치 포켓몬은 전투력과 판매가가 일반의 1.5배입니다.',
           '황금 포켓몬과 이로치가 동시에 적용될 수도 있습니다!',
@@ -307,7 +308,8 @@ export default function MainScreen() {
           ⚗️ 강화 +15부터 성공 시 전투력이 <span style={{ color: '#e040fb', fontWeight: 700 }}>2배</span><br/>
           🏟️ 체육관에서 대규모 코인 획득<br/>
           ✨ 황금 포켓몬은 0.5% 확률 — 판매가 5배!<br/>
-          <span style={{ color: '#00e5ff', fontWeight: 700 }}>✦ 이로치 포켓몬은 5% 확률</span> — 전투력·판매가 1.5배!
+          <span style={{ color: '#00e5ff', fontWeight: 700 }}>✦ 이로치 포켓몬은 5% 확률</span> — 전투력·판매가 1.5배!<br/>
+          <span style={{ color: '#00e5ff', fontWeight: 700 }}>✦ 이로치 아르세우스는 0.5% 확률</span> — 마스터볼로만 포획 가능!
         </div>
       </div>
 
