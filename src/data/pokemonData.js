@@ -836,6 +836,6 @@ export const DAY_TYPES = {
   2: { label: '수요일', short: '수', emoji: '⚡', color: '#F8D030', types: ['electric', 'steel', 'rock'] },
   3: { label: '목요일', short: '목', emoji: '🥊', color: '#C03028', types: ['fighting', 'ground', 'flying'] },
   4: { label: '금요일', short: '금', emoji: '🔮', color: '#F85888', types: ['psychic', 'ghost', 'dark'] },
-  5: { label: '토요일', short: '토', emoji: '🐉', color: '#7038F8', types: ['dragon', 'fairy'] },
-  6: { label: '일요일', short: '일', emoji: '🐰', color: '#A8A878', types: ['normal'] },
+  5: { label: '토요일', short: '토', emoji: '🐰', color: '#A8A878', types: ['normal'] },
+  6: { label: '일요일', short: '일', emoji: '🌈', color: '#6B7280', types: [] },
 };

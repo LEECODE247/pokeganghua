@@ -85,7 +85,7 @@ function SlotCard({ idx, pokemon, onSelect, onClear, dayAllowedTypes }) {
   const filled = !!pokemon;
   const pow    = pokemon ? calculatePower(pokemon) : 0;
   const pTypes = pokemon ? (POKEMON_TYPES[pokemon.pokemonId] || ['normal']) : [];
-  const typeOk = !dayAllowedTypes || pTypes.some(t => dayAllowedTypes.has(t));
+  const typeOk = !dayAllowedTypes || dayAllowedTypes.size === 0 || pTypes.some(t => dayAllowedTypes.has(t));
 
   return (
     <div className={`battle-slot-card ${filled ? 'filled' : 'empty'}`} style={filled ? {
@@ -169,8 +169,9 @@ export default function BattleScreen() {
   // ── 내 오늘 팀 ──────────────────────────────────────────────
   const todayTeamIds   = dayBattleTeams[todayIdx] || [null, null, null];
   const myTodayTeam    = todayTeamIds.map(id => id ? (inventory.find(p => p.instanceId === id) || null) : null);
-  const todayTeamReady = myTodayTeam.every(p =>
-    p && (POKEMON_TYPES[p.pokemonId] || ['normal']).some(t => todayTypes.has(t)));
+  const todayTeamReady = todayTypes.size === 0
+    ? myTodayTeam.every(Boolean)
+    : myTodayTeam.every(p => p && (POKEMON_TYPES[p.pokemonId] || ['normal']).some(t => todayTypes.has(t)));
   const todayFull      = myTodayTeam.every(Boolean);
 
   const today       = new Date().toDateString();
@@ -258,8 +259,10 @@ export default function BattleScreen() {
     const teamIds  = dayBattleTeams[dayIdx] || [null, null, null];
     return [...inventory]
       .filter(p => {
-        const pTypes = POKEMON_TYPES[p.pokemonId] || ['normal'];
-        if (!pTypes.some(t => allowed.has(t))) return false;
+        if (allowed.size > 0) {
+          const pTypes = POKEMON_TYPES[p.pokemonId] || ['normal'];
+          if (!pTypes.some(t => allowed.has(t))) return false;
+        }
         if (teamIds.some((id, i) => i !== slotIdx && id === p.instanceId)) return false;
         return canAssignToSlot(slotIdx, p, teamIds, inventory);
       })
@@ -350,10 +353,13 @@ export default function BattleScreen() {
             {todayConfig.emoji} 요일 배틀
           </div>
           <div style={{ display:'flex', gap:4, marginTop:5, flexWrap:'wrap' }}>
-            {todayConfig.types.map(t => {
-              const meta = TYPE_META[t];
-              return <span key={t} style={{ background:meta.color, color:'#fff', fontSize:'0.55rem', fontWeight:800, padding:'2px 7px', borderRadius:8 }}>{meta.label}</span>;
-            })}
+            {todayConfig.types.length > 0
+              ? todayConfig.types.map(t => {
+                  const meta = TYPE_META[t];
+                  return <span key={t} style={{ background:meta.color, color:'#fff', fontSize:'0.55rem', fontWeight:800, padding:'2px 7px', borderRadius:8 }}>{meta.label}</span>;
+                })
+              : <span style={{ fontSize:'0.6rem', fontWeight:800, color:'rgba(255,255,255,0.6)', padding:'2px 7px', borderRadius:8, border:'1px solid rgba(255,255,255,0.2)' }}>🌈 모든 타입 허용</span>
+            }
           </div>
           <div style={{ fontSize:'0.65rem', color:todayConfig.color, marginTop:4, fontWeight:700 }}>{todayConfig.label} · 오늘의 배틀</div>
         </div>
@@ -428,7 +434,7 @@ export default function BattleScreen() {
             </div>
             {(!todayFull || !todayTeamReady) && (
               <div style={{ textAlign:'center', fontSize:'0.7rem', color:'#ef5350', marginTop:8 }}>
-                팀 등록 탭에서 오늘의 타입({todayConfig.types.map(t=>TYPE_META[t]?.label).join('·')}) 포켓몬을 등록하세요
+                팀 등록 탭에서{todayConfig.types.length > 0 ? ` ${todayConfig.types.map(t=>TYPE_META[t]?.label).join('·')} 타입 ` : ' '}포켓몬을 등록하세요
               </div>
             )}
           </div>
@@ -562,13 +568,16 @@ export default function BattleScreen() {
                 borderRadius:10, padding:'10px 12px', marginBottom:12,
               }}>
                 <div style={{ fontSize:'0.8rem', fontWeight:800, color:DAY_TYPES[registerDay].color, marginBottom:6 }}>
-                  {DAY_TYPES[registerDay].emoji} {DAY_TYPES[registerDay].label} — 허용 타입
+                  {DAY_TYPES[registerDay].emoji} {DAY_TYPES[registerDay].label} — {DAY_TYPES[registerDay].types.length > 0 ? '허용 타입' : '자유 대전'}
                 </div>
                 <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
-                  {DAY_TYPES[registerDay].types.map(t => {
-                    const meta = TYPE_META[t];
-                    return <span key={t} style={{ background:meta.color, color:'#fff', fontSize:'0.62rem', fontWeight:800, padding:'2px 10px', borderRadius:10 }}>{meta.label}</span>;
-                  })}
+                  {DAY_TYPES[registerDay].types.length > 0
+                    ? DAY_TYPES[registerDay].types.map(t => {
+                        const meta = TYPE_META[t];
+                        return <span key={t} style={{ background:meta.color, color:'#fff', fontSize:'0.62rem', fontWeight:800, padding:'2px 10px', borderRadius:10 }}>{meta.label}</span>;
+                      })
+                    : <span style={{ fontSize:'0.62rem', color:'rgba(255,255,255,0.5)' }}>모든 타입의 포켓몬 등록 가능</span>
+                  }
                 </div>
               </div>
 
@@ -689,7 +698,9 @@ export default function BattleScreen() {
                 </span>
               </div>
               <div style={{ fontSize:'0.68rem', color:'rgba(255,255,255,0.35)', marginBottom:10 }}>
-                허용: {DAY_TYPES[selectingSlot.day].types.map(t => TYPE_META[t]?.label).join(' · ')} 타입만 등록 가능
+                {DAY_TYPES[selectingSlot.day].types.length > 0
+                  ? `허용: ${DAY_TYPES[selectingSlot.day].types.map(t => TYPE_META[t]?.label).join(' · ')} 타입만 등록 가능`
+                  : '자유 대전 — 모든 타입 등록 가능'}
               </div>
               {getAvailableForDay(selectingSlot.day, selectingSlot.slotIdx).length === 0
                 ? <div style={{ color:'rgba(255,255,255,0.3)', textAlign:'center', padding:24 }}>
