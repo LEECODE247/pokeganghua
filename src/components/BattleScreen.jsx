@@ -79,7 +79,7 @@ function HpBox({ name, hp, right }) {
 }
 
 /* ── 슬롯 카드 ──────────────────────────────────────────────── */
-function SlotCard({ idx, pokemon, onSelect, onClear, dayAllowedTypes }) {
+function SlotCard({ idx, pokemon, onSelect, onClear, dayAllowedTypes, synergyMult = 1, synergyIcons = [] }) {
   const label  = `슬롯 ${idx + 1}`;
   const color  = pokemon ? getRarityColor(pokemon.rarity) : 'rgba(255,255,255,0.15)';
   const filled = !!pokemon;
@@ -110,7 +110,26 @@ function SlotCard({ idx, pokemon, onSelect, onClear, dayAllowedTypes }) {
             })}
           </div>
           <div style={{ fontSize:'0.6rem', color, marginTop:2 }}>{getRarityStars(pokemon.rarity)}{pokemon.enhanceLevel > 0 ? ` +${pokemon.enhanceLevel}` : ''}</div>
-          <div style={{ fontSize:'0.6rem', fontWeight:800, color:'rgba(255,255,255,0.75)', marginTop:2 }}>⚡{pow.toLocaleString()}</div>
+          <div style={{ fontSize:'0.6rem', fontWeight:800, color:'rgba(255,255,255,0.75)', marginTop:2 }}>
+            ⚡{pow.toLocaleString()}
+            {synergyMult > 1.0 && (
+              <span style={{ color:'#4caf50', marginLeft:3 }}>→{Math.round(pow * synergyMult).toLocaleString()}</span>
+            )}
+          </div>
+          {synergyMult > 1.0 && (
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:3, marginTop:2, flexWrap:'wrap' }}>
+              {synergyIcons.map(s => (
+                <span key={s.id} title={s.name} style={{
+                  background: s.color ? s.color + '33' : 'rgba(255,255,255,0.1)',
+                  border: `1px solid ${s.color || 'rgba(255,255,255,0.2)'}66`,
+                  borderRadius: 6, fontSize:'0.55rem', padding:'1px 4px',
+                  color: s.color || '#ffd600', fontWeight: 800, whiteSpace:'nowrap',
+                }}>
+                  {s.icon} ×{s.multiplier}
+                </span>
+              ))}
+            </div>
+          )}
           {!typeOk && <div style={{ fontSize:'0.5rem', color:'#ef5350', marginTop:2 }}>타입 불일치</div>}
           <div style={{ display:'flex', gap:4, marginTop:6, justifyContent:'center' }}>
             <button onClick={onSelect} style={{ fontSize:'0.58rem', padding:'2px 8px', borderRadius:6, border:'1px solid rgba(255,255,255,0.15)', background:'rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.6)', cursor:'pointer' }}>변경</button>
@@ -606,19 +625,29 @@ export default function BattleScreen() {
               })()}
 
               {/* 슬롯 3개 */}
-              <div style={{ display:'flex', gap:8, marginBottom:14 }}>
-                {[0,1,2].map(i => {
-                  const id = (dayBattleTeams[registerDay] || [null,null,null])[i];
-                  const p  = id ? inventory.find(x => x.instanceId === id) : null;
-                  return (
-                    <SlotCard key={i} idx={i} pokemon={p}
-                      dayAllowedTypes={new Set(DAY_TYPES[registerDay].types)}
-                      onSelect={() => setSelectingSlot({ day: registerDay, slotIdx: i })}
-                      onClear={() => dispatch({ type:'SET_DAY_BATTLE_SLOT', day:registerDay, slot:i, pokemonId:null })}
-                    />
-                  );
-                })}
-              </div>
+              {(() => {
+                const regIds     = dayBattleTeams[registerDay] || [null,null,null];
+                const regPokemon = regIds.map(id => id ? inventory.find(p => p.instanceId === id) : null);
+                const regSyn     = getTeamSynergies(regPokemon, registerDay);
+                return (
+                  <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+                    {[0,1,2].map(i => {
+                      const id = regIds[i];
+                      const p  = id ? inventory.find(x => x.instanceId === id) : null;
+                      const slotSynIcons = regSyn.active.filter(s => s.appliedSlots?.includes(i));
+                      return (
+                        <SlotCard key={i} idx={i} pokemon={p}
+                          dayAllowedTypes={new Set(DAY_TYPES[registerDay].types)}
+                          synergyMult={regSyn.multipliers[i]}
+                          synergyIcons={slotSynIcons}
+                          onSelect={() => setSelectingSlot({ day: registerDay, slotIdx: i })}
+                          onClear={() => dispatch({ type:'SET_DAY_BATTLE_SLOT', day:registerDay, slot:i, pokemonId:null })}
+                        />
+                      );
+                    })}
+                  </div>
+                );
+              })()}
 
               {/* 팀 구성 제한 안내 */}
               <div style={{
