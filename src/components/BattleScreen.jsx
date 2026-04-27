@@ -243,7 +243,7 @@ export default function BattleScreen() {
     const ids      = dayBattleTeams[dayIdx] || [null, null, null];
     const pokemon  = ids.map(id => id ? inventory.find(p => p.instanceId === id) : null);
     if (!pokemon.every(Boolean)) return;
-    const synergies = getTeamSynergies(pokemon);
+    const synergies = getTeamSynergies(pokemon, dayIdx);
     const slots     = pokemon.map((p, i) => makeSlotData(p, synergies.multipliers[i]));
     setRegisterSaving(true);
     try {
@@ -277,7 +277,7 @@ export default function BattleScreen() {
     setMatchResult(null);
 
     const oppSlots  = opponent.slots;
-    const synergies = getTeamSynergies(myTodayTeam);
+    const synergies = getTeamSynergies(myTodayTeam, todayIdx);
     let myW = 0, oppW = 0;
     const rounds = [];
     for (let i = 0; i < 3; i++) {
@@ -636,7 +636,7 @@ export default function BattleScreen() {
                 const regPokemon = regIds.map(id => id ? inventory.find(p => p.instanceId === id) : null);
                 const filledCount = regPokemon.filter(Boolean).length;
                 if (filledCount === 0) return null;
-                const syn = getTeamSynergies(regPokemon);
+                const syn = getTeamSynergies(regPokemon, registerDay);
                 if (syn.active.length === 0 && syn.partial.length === 0) return null;
                 return (
                   <div style={{

@@ -140,109 +140,93 @@ export function getTypeAdvantage(attackerTypes, defenderTypes) {
 
 // ── 배틀 조합 시너지 ──────────────────────────────────────────────────────────
 const FIXED_SYNERGIES = [
-  {
-    id: 'legendary_birds', name: '전설의 새', icon: '🦅',
-    desc: '썬더 · 파이어 · 프리저',
-    requiredIds: [145, 146, 144],
-    multiplier: 1.5, kind: 'fixed_all',
-  },
-  {
-    id: 'gen1_starters', name: '1세대 삼인방', icon: '1️⃣',
-    desc: '이상해풀 · 거북왕 · 리자몽',
-    requiredIds: [3, 6, 9],
-    multiplier: 3, kind: 'fixed_all',
-  },
-  {
-    id: 'gen2_starters', name: '2세대 삼인방', icon: '2️⃣',
-    desc: '메가니움 · 장크로다일 · 블레이범',
-    requiredIds: [154, 160, 157],
-    multiplier: 3, kind: 'fixed_all',
-  },
-  {
-    id: 'divine_blessing', name: '신의 가호', icon: '✨',
-    desc: '아르세우스 포함 + 임의 2마리',
-    arceusId: 493,
-    multiplier: 2, kind: 'arceus',
-  },
-  // ── ★4 듀오 시너지 ──────────────────────────────────────────
-  {
-    id: 'psychic_duo', name: '에스퍼의 쌍벽', icon: '🔮',
-    desc: '뮤 + 뮤츠',
-    requiredIds: [150, 151],
-    multiplier: 2.5, kind: 'fixed_all',
-  },
-  {
-    id: 'sky_lords', name: '천공의 지배자', icon: '🌊',
-    desc: '루기아 + 칠색조',
-    requiredIds: [249, 250],
-    multiplier: 2.5, kind: 'fixed_all',
-  },
-  {
-    id: 'spacetime', name: '시공의 신', icon: '⚖️',
-    desc: '디아루가 + 펄기아',
-    requiredIds: [483, 484],
-    multiplier: 2.8, kind: 'fixed_all',
-  },
-  {
-    id: 'legend_beasts', name: '전설의 개', icon: '🐾',
-    desc: '라이코 · 엔테이 · 스이쿤 중 2마리',
-    groupIds: [243, 244, 245],
-    multiplier: 2.0, kind: 'group_any2',
-  },
-  // ── 요일 배틀 전용 시너지 (캐릭터 조합, 실제 데이터 있는 전설만) ──
-  // 월 🔥 — 불꽃·물·얼음
-  { id: 'cold_heat', name: '냉열 충돌', icon: '❄️', dayIdx: 0,
-    desc: '프리저 + 파이어',
-    requiredIds: [144, 146], multiplier: 2.2, kind: 'fixed_all' },
-  // 화 🌿 — 풀·독·벌레
-  { id: 'nature_pulse', name: '풀 세대 계승', icon: '🌱', dayIdx: 1,
-    desc: '이상해풀 + 메가니움',
-    requiredIds: [3, 154], multiplier: 2.0, kind: 'fixed_all' },
-  // 수 ⚡ — 전기·강철·바위
-  { id: 'thunder_lords', name: '천둥의 군주', icon: '⚡', dayIdx: 2,
-    desc: '썬더 + 라이코',
-    requiredIds: [145, 243], multiplier: 2.2, kind: 'fixed_all' },
-  // 목 🥊 — 격투·땅·비행
-  { id: 'sky_pair', name: '빙전 쌍조', icon: '🦅', dayIdx: 3,
-    desc: '프리저 + 썬더',
-    requiredIds: [144, 145], multiplier: 2.2, kind: 'fixed_all' },
-  // 금 🔮 — 에스퍼·고스트·악
-  { id: 'ghost_duo', name: '유령 쌍성', icon: '👻', dayIdx: 4,
-    desc: '기라티나 + 팬텀',
-    requiredIds: [487, 94], multiplier: 2.2, kind: 'fixed_all' },
-  // 토 🐰 — 노말
-  { id: 'arceus_snorlax', name: '창조신의 유대', icon: '🌟', dayIdx: 5,
-    desc: '아르세우스 + 잠만보',
-    requiredIds: [493, 143], multiplier: 2.2, kind: 'fixed_all' },
-  // 일 🌈 — 자유 대전
-  { id: 'genesis_duo', name: '역신의 쌍룡', icon: '🐲', dayIdx: 6,
-    desc: '디아루가 + 기라티나',
-    requiredIds: [483, 487], multiplier: 2.2, kind: 'fixed_all' },
+  // ── 글로벌 (모든 요일 적용) ──────────────────────────────────────────────
+  { id: 'legendary_birds', name: '전설의 새',     icon: '🦅',
+    desc: '썬더 · 파이어 · 프리저', requiredIds: [145, 146, 144], multiplier: 1.5, kind: 'fixed_all' },
+  { id: 'gen1_starters',   name: '1세대 삼인방',  icon: '1️⃣',
+    desc: '이상해풀 · 거북왕 · 리자몽', requiredIds: [3, 6, 9], multiplier: 3, kind: 'fixed_all' },
+  { id: 'gen2_starters',   name: '2세대 삼인방',  icon: '2️⃣',
+    desc: '메가니움 · 장크로다일 · 블레이범', requiredIds: [154, 160, 157], multiplier: 3, kind: 'fixed_all' },
+  { id: 'divine_blessing', name: '신의 가호',     icon: '✨',
+    desc: '아르세우스 + 임의 2마리', arceusId: 493, multiplier: 2, kind: 'arceus' },
+  { id: 'psychic_duo',     name: '에스퍼의 쌍벽', icon: '🔮',
+    desc: '뮤 + 뮤츠', requiredIds: [150, 151], multiplier: 2.5, kind: 'fixed_all' },
+  { id: 'sky_lords',       name: '천공의 지배자', icon: '🌊',
+    desc: '루기아 + 칠색조', requiredIds: [249, 250], multiplier: 2.5, kind: 'fixed_all' },
+  { id: 'spacetime',       name: '시공의 신',     icon: '⚖️',
+    desc: '디아루가 + 펄기아', requiredIds: [483, 484], multiplier: 2.8, kind: 'fixed_all' },
+  { id: 'legend_beasts',   name: '전설의 개',     icon: '🐾',
+    desc: '라이코 · 엔테이 · 스이쿤 중 2마리', groupIds: [243, 244, 245], multiplier: 2.0, kind: 'group_any2' },
+  // ── 월요일 (불꽃·물·얼음) ──────────────────────────────────────────────
+  { id: 'mon_type_each', name: '삼원소 조화',    icon: '🌡️', dayIdx: 0,
+    desc: '불꽃·물·얼음 각 1마리씩', requiredTypes: ['fire','water','ice'], multiplier: 2.0, kind: 'type_each' },
+  { id: 'entei_suicune',  name: '불꽃과 물의 신', icon: '🔥', dayIdx: 0,
+    desc: '엔테이 + 스이쿤', requiredIds: [244, 245], multiplier: 3.0, kind: 'fixed_all' },
+  { id: 'hooh_moltres',   name: '태양의 두 새',   icon: '🦜', dayIdx: 0,
+    desc: '칠색조 + 파이어', requiredIds: [250, 146], multiplier: 3.0, kind: 'fixed_all' },
+  // ── 화요일 (풀·독·벌레) ──────────────────────────────────────────────
+  { id: 'tue_type_each',    name: '자연의 섭리',   icon: '🌿', dayIdx: 1,
+    desc: '풀·독·벌레 각 1마리씩', requiredTypes: ['grass','poison','bug'], multiplier: 2.0, kind: 'type_each' },
+  { id: 'celebi_venusaur',  name: '시간의 수호',   icon: '🌱', dayIdx: 1,
+    desc: '세레비 + 이상해꽃', requiredIds: [251, 3], multiplier: 3.0, kind: 'fixed_all' },
+  // ── 수요일 (전기·강철·바위) ──────────────────────────────────────────────
+  { id: 'wed_type_each',  name: '강철 전류',       icon: '⚡', dayIdx: 2,
+    desc: '전기·강철·바위 각 1마리씩', requiredTypes: ['electric','steel','rock'], multiplier: 2.0, kind: 'type_each' },
+  { id: 'raikou_dialga',  name: '번개와 시간',     icon: '🌩️', dayIdx: 2,
+    desc: '라이코 + 디아루가', requiredIds: [243, 483], multiplier: 3.0, kind: 'fixed_all' },
+  // ── 목요일 (격투·땅·비행) ──────────────────────────────────────────────
+  { id: 'thu_type_each',  name: '천지합일',         icon: '🥊', dayIdx: 3,
+    desc: '격투·땅·비행 각 1마리씩', requiredTypes: ['fighting','ground','flying'], multiplier: 2.0, kind: 'type_each' },
+  // 목요일은 글로벌 시너지 spacetime(483,484), sky_lords(249,250)도 활성
+  // ── 금요일 (에스퍼·고스트·악) ──────────────────────────────────────────────
+  { id: 'fri_type_each',  name: '어둠의 심연',      icon: '🌑', dayIdx: 4,
+    desc: '에스퍼·고스트·악 각 1마리씩', requiredTypes: ['psychic','ghost','dark'], multiplier: 2.0, kind: 'type_each' },
+  { id: 'lugia_celebi',   name: '빛과 시간',        icon: '🌟', dayIdx: 4,
+    desc: '루기아 + 세레비', requiredIds: [249, 251], multiplier: 3.0, kind: 'fixed_all' },
+  // 금요일은 글로벌 시너지 psychic_duo(150,151)도 활성
+  // ── 토요일 (노말) ──────────────────────────────────────────────
+  // 토요일은 글로벌 divine_blessing(493)도 활성
+  { id: 'star3_rebellion', name: '3성의 반란',       icon: '⭐', dayIdx: 5,
+    desc: '3마리 모두 ★3', multiplier: 5.0, kind: 'star3_rebellion' },
 ];
 
 // 조합표 카탈로그 (UI 표시용)
 export const SYNERGY_CATALOG = [
-  { fixedId: 'legendary_birds', name: '전설의 새',    icon: '🦅', desc: '썬더 + 파이어 + 프리저',          bonus: '전체 ×1.5',       color: '#4fc3f7' },
-  { fixedId: 'gen1_starters',   name: '1세대 삼인방', icon: '1️⃣', desc: '이상해풀 + 거북왕 + 리자몽',       bonus: '전체 ×3',         color: '#81c784' },
-  { fixedId: 'gen2_starters',   name: '2세대 삼인방', icon: '2️⃣', desc: '메가니움 + 장크로다일 + 블레이범', bonus: '전체 ×3',         color: '#4db6ac' },
-  { fixedId: 'divine_blessing', name: '신의 가호',    icon: '✨', desc: '아르세우스 + 임의 2마리',          bonus: '나머지 ×2',       color: '#ffb74d' },
-  { fixedId: 'psychic_duo',     name: '에스퍼의 쌍벽', icon: '🔮', desc: '뮤 + 뮤츠 (★4 듀오)',            bonus: '두 마리 ×2.5',    color: '#ce93d8' },
-  { fixedId: 'sky_lords',       name: '천공의 지배자', icon: '🌊', desc: '루기아 + 칠색조 (★4 듀오)',        bonus: '두 마리 ×2.5',    color: '#4fc3f7' },
-  { fixedId: 'spacetime',       name: '시공의 신',    icon: '⚖️', desc: '디아루가 + 펄기아 (★4 듀오)',      bonus: '두 마리 ×2.8',    color: '#b39ddb' },
-  { fixedId: 'legend_beasts',   name: '전설의 개',    icon: '🐾', desc: '라이코 · 엔테이 · 스이쿤 중 2마리', bonus: '두 마리 ×2.0',   color: '#ffcc80' },
-  { fixedId: 'type3',           name: '삼색 공명',    icon: '🔱', desc: '3마리 모두 같은 타입',             bonus: '전체 ×1.5',       color: '#ce93d8' },
-  { fixedId: 'type2',           name: '듀오 공명',    icon: '🔗', desc: '2마리가 같은 타입 보유',           bonus: '해당 2마리 ×1.3', color: '#90caf9' },
-  // 요일 배틀 전용 (캐릭터 조합, 데이터 확인된 포켓몬만)
-  { fixedId: 'cold_heat',      name: '냉열 충돌',     icon: '❄️', desc: '프리저 + 파이어',       bonus: '두 마리 ×2.2', color: '#98d8d8', dayIdx: 0 },
-  { fixedId: 'nature_pulse',   name: '풀 세대 계승',  icon: '🌱', desc: '이상해풀 + 메가니움',    bonus: '두 마리 ×2.0', color: '#4caf50', dayIdx: 1 },
-  { fixedId: 'thunder_lords',  name: '천둥의 군주',   icon: '⚡', desc: '썬더 + 라이코',         bonus: '두 마리 ×2.2', color: '#F8D030', dayIdx: 2 },
-  { fixedId: 'sky_pair',       name: '빙전 쌍조',     icon: '🦅', desc: '프리저 + 썬더',         bonus: '두 마리 ×2.2', color: '#4fc3f7', dayIdx: 3 },
-  { fixedId: 'ghost_duo',      name: '유령 쌍성',     icon: '👻', desc: '기라티나 + 팬텀',       bonus: '두 마리 ×2.2', color: '#a78bfa', dayIdx: 4 },
-  { fixedId: 'arceus_snorlax', name: '창조신의 유대', icon: '🌟', desc: '아르세우스 + 잠만보',   bonus: '두 마리 ×2.2', color: '#FF6B00', dayIdx: 5 },
-  { fixedId: 'genesis_duo',    name: '역신의 쌍룡',   icon: '🐲', desc: '디아루가 + 기라티나',   bonus: '두 마리 ×2.2', color: '#7038F8', dayIdx: 6 },
+  // ── 글로벌 (모든 요일·일요일 자유 대전) ──
+  { fixedId: 'legendary_birds', name: '전설의 새',     icon: '🦅', desc: '썬더 + 파이어 + 프리저',           bonus: '전체 ×1.5',       color: '#4fc3f7' },
+  { fixedId: 'gen1_starters',   name: '1세대 삼인방',  icon: '1️⃣', desc: '이상해풀 · 거북왕 · 리자몽',         bonus: '전체 ×3',         color: '#81c784' },
+  { fixedId: 'gen2_starters',   name: '2세대 삼인방',  icon: '2️⃣', desc: '메가니움 · 장크로다일 · 블레이범',   bonus: '전체 ×3',         color: '#4db6ac' },
+  { fixedId: 'divine_blessing', name: '신의 가호',     icon: '✨', desc: '아르세우스 + 임의 2마리',            bonus: '나머지 ×2',       color: '#ffb74d' },
+  { fixedId: 'psychic_duo',     name: '에스퍼의 쌍벽', icon: '🔮', desc: '뮤 + 뮤츠',                        bonus: '두 마리 ×2.5',    color: '#ce93d8' },
+  { fixedId: 'sky_lords',       name: '천공의 지배자', icon: '🌊', desc: '루기아 + 칠색조',                   bonus: '두 마리 ×2.5',    color: '#4fc3f7' },
+  { fixedId: 'spacetime',       name: '시공의 신',     icon: '⚖️', desc: '디아루가 + 펄기아',                 bonus: '두 마리 ×2.8',    color: '#b39ddb' },
+  { fixedId: 'legend_beasts',   name: '전설의 개',     icon: '🐾', desc: '라이코 · 엔테이 · 스이쿤 중 2마리', bonus: '두 마리 ×2.0',    color: '#ffcc80' },
+  { fixedId: 'type3',           name: '삼색 공명',     icon: '🔱', desc: '3마리 모두 같은 타입',              bonus: '전체 ×1.5',       color: '#ce93d8' },
+  { fixedId: 'type2',           name: '듀오 공명',     icon: '🔗', desc: '2마리가 같은 타입 보유',            bonus: '해당 2마리 ×1.3', color: '#90caf9' },
+  // ── 월요일 전용 (불꽃·물·얼음) ──
+  { fixedId: 'mon_type_each', name: '삼원소 조화',    icon: '🌡️', desc: '불꽃·물·얼음 각 1마리씩', bonus: '전체 ×2.0',    color: '#ef9a9a', dayIdx: 0 },
+  { fixedId: 'entei_suicune', name: '불꽃과 물의 신', icon: '🔥', desc: '엔테이 + 스이쿤',          bonus: '두 마리 ×3.0', color: '#ef5350', dayIdx: 0 },
+  { fixedId: 'hooh_moltres',  name: '태양의 두 새',   icon: '🦜', desc: '칠색조 + 파이어',          bonus: '두 마리 ×3.0', color: '#ff7043', dayIdx: 0 },
+  // ── 화요일 전용 (풀·독·벌레) ──
+  { fixedId: 'tue_type_each',   name: '자연의 섭리',   icon: '🌿', desc: '풀·독·벌레 각 1마리씩', bonus: '전체 ×2.0',    color: '#a5d6a7', dayIdx: 1 },
+  { fixedId: 'celebi_venusaur', name: '시간의 수호',   icon: '🌱', desc: '세레비 + 이상해꽃',      bonus: '두 마리 ×3.0', color: '#66bb6a', dayIdx: 1 },
+  // ── 수요일 전용 (전기·강철·바위) ──
+  { fixedId: 'wed_type_each', name: '강철 전류',       icon: '⚡', desc: '전기·강철·바위 각 1마리씩', bonus: '전체 ×2.0',    color: '#fff176', dayIdx: 2 },
+  { fixedId: 'raikou_dialga', name: '번개와 시간',     icon: '🌩️', desc: '라이코 + 디아루가',         bonus: '두 마리 ×3.0', color: '#ffd54f', dayIdx: 2 },
+  // ── 목요일 전용 (격투·땅·비행) ──
+  { fixedId: 'thu_type_each', name: '천지합일',        icon: '🥊', desc: '격투·땅·비행 각 1마리씩', bonus: '전체 ×2.0',    color: '#ffcc80', dayIdx: 3 },
+  { fixedId: 'spacetime',     name: '시공의 신',       icon: '⚖️', desc: '디아루가 + 펄기아',        bonus: '두 마리 ×2.8', color: '#b39ddb', dayIdx: 3 },
+  { fixedId: 'sky_lords',     name: '천공의 지배자',   icon: '🌊', desc: '루기아 + 칠색조',          bonus: '두 마리 ×2.5', color: '#4fc3f7', dayIdx: 3 },
+  // ── 금요일 전용 (에스퍼·고스트·악) ──
+  { fixedId: 'fri_type_each', name: '어둠의 심연',     icon: '🌑', desc: '에스퍼·고스트·악 각 1마리씩', bonus: '전체 ×2.0',    color: '#ce93d8', dayIdx: 4 },
+  { fixedId: 'psychic_duo',   name: '에스퍼의 쌍벽',  icon: '🔮', desc: '뮤 + 뮤츠',                  bonus: '두 마리 ×2.5', color: '#ce93d8', dayIdx: 4 },
+  { fixedId: 'lugia_celebi',  name: '빛과 시간',       icon: '🌟', desc: '루기아 + 세레비',             bonus: '두 마리 ×3.0', color: '#4fc3f7', dayIdx: 4 },
+  // ── 토요일 전용 (노말) ──
+  { fixedId: 'divine_blessing', name: '신의 가호',   icon: '✨', desc: '아르세우스 + 임의 2마리', bonus: '나머지 ×2',   color: '#ffb74d', dayIdx: 5 },
+  { fixedId: 'star3_rebellion', name: '3성의 반란',  icon: '⭐', desc: '3마리 모두 ★3',           bonus: '전체 ×5.0',  color: '#ffd600', dayIdx: 5 },
 ];
 
-export function getTeamSynergies(team) {
+export function getTeamSynergies(team, dayIdx = null) {
   // team: [p, p, p] — pokemon object or null per slot
   const multipliers = [1.0, 1.0, 1.0];
   const active = [];
@@ -253,6 +237,8 @@ export function getTeamSynergies(team) {
 
   // ── 고정 시너지 ────────────────────────────────────────────
   for (const syn of FIXED_SYNERGIES) {
+    // 요일 전용 시너지는 해당 요일에만 적용
+    if (syn.dayIdx !== undefined && dayIdx !== null && syn.dayIdx !== dayIdx) continue;
     if (syn.kind === 'type_each') {
       const typeCovered = syn.requiredTypes.map(reqType =>
         team.some(p => p && (POKEMON_TYPES[p.pokemonId] || ['normal']).includes(reqType))
@@ -300,6 +286,17 @@ export function getTeamSynergies(team) {
           .slice(0, 2 - foundSlots.length)
           .map(id => POKEMON_NAMES[id] || `#${id}`);
         partial.push({ ...syn, foundCount: foundSlots.length, missing: missingNames });
+      }
+      continue;
+    }
+    if (syn.kind === 'star3_rebellion') {
+      const filledTeam = team.filter(Boolean);
+      const star3 = filledTeam.filter(p => p.rarity === 3);
+      if (filledTeam.length === 3 && star3.length === 3) {
+        active.push({ ...syn, appliedSlots: [0, 1, 2] });
+        [0, 1, 2].forEach(i => { multipliers[i] *= syn.multiplier; });
+      } else {
+        partial.push({ ...syn, foundCount: star3.length, missing: [`★3 ${3 - star3.length}마리 부족`] });
       }
       continue;
     }
