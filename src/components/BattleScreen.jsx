@@ -427,30 +427,50 @@ export default function BattleScreen() {
                 : <span style={{ fontSize:'0.65rem', color:'#ef5350', fontWeight:800 }}>⚠️ 미등록</span>
               }
             </div>
-            <div style={{ display:'flex', gap:8 }}>
-              {[0,1,2].map(i => (
-                <div key={i} style={{ flex:1, textAlign:'center' }}>
-                  {myTodayTeam[i] ? (
-                    <>
-                      <img src={myTodayTeam[i].isShiny ? getPokemonShinyImageUrl(myTodayTeam[i].pokemonId) : getPokemonImageUrl(myTodayTeam[i].pokemonId)}
-                        style={{ width:46, height:46, imageRendering:'pixelated', objectFit:'contain',
-                          filter: myTodayTeam[i].isShiny
-                            ? 'drop-shadow(0 0 6px rgba(0,229,255,0.9))'
-                            : `drop-shadow(0 0 6px ${getRarityColor(myTodayTeam[i].rarity)}88)` }} alt="" />
-                      <div style={{ fontSize:'0.56rem', color:getRarityColor(myTodayTeam[i].rarity), marginTop:2, fontWeight:700 }}>
-                        {myTodayTeam[i].isShiny && <span style={{ color:'#00e5ff', marginRight:2 }}>✦</span>}
-                        {'★'.repeat(myTodayTeam[i].rarity)}
+            {(() => {
+              const mySyn      = getTeamSynergies(myTodayTeam, todayIdx);
+              const mySlotPows = myTodayTeam.map((p, i) => p ? Math.round(calculatePower(p) * mySyn.multipliers[i]) : 0);
+              const myTotalPow = mySlotPows.reduce((s, v) => s + v, 0);
+              return (
+                <>
+                  <div style={{ display:'flex', gap:8 }}>
+                    {[0,1,2].map(i => (
+                      <div key={i} style={{ flex:1, textAlign:'center' }}>
+                        {myTodayTeam[i] ? (
+                          <>
+                            <img src={myTodayTeam[i].isShiny ? getPokemonShinyImageUrl(myTodayTeam[i].pokemonId) : getPokemonImageUrl(myTodayTeam[i].pokemonId)}
+                              style={{ width:46, height:46, imageRendering:'pixelated', objectFit:'contain',
+                                filter: myTodayTeam[i].isShiny
+                                  ? 'drop-shadow(0 0 6px rgba(0,229,255,0.9))'
+                                  : `drop-shadow(0 0 6px ${getRarityColor(myTodayTeam[i].rarity)}88)` }} alt="" />
+                            <div style={{ fontSize:'0.56rem', color:getRarityColor(myTodayTeam[i].rarity), marginTop:2, fontWeight:700 }}>
+                              {myTodayTeam[i].isShiny && <span style={{ color:'#00e5ff', marginRight:2 }}>✦</span>}
+                              {'★'.repeat(myTodayTeam[i].rarity)}
+                            </div>
+                            <div style={{ fontSize:'0.5rem', color:'rgba(255,255,255,0.4)', marginTop:1 }}>
+                              ⚡{mySlotPows[i].toLocaleString()}
+                              {mySyn.multipliers[i] > 1 && (
+                                <span style={{ color:'#4caf50', marginLeft:2 }}>×{mySyn.multipliers[i].toFixed(1)}</span>
+                              )}
+                            </div>
+                          </>
+                        ) : (
+                          <div style={{ width:46, height:46, margin:'0 auto', border:'1.5px dashed rgba(255,255,255,0.1)',
+                            borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center',
+                            color:'rgba(255,255,255,0.12)', fontSize:'1.1rem' }}>?</div>
+                        )}
+                        <div style={{ fontSize:'0.5rem', color:'rgba(255,255,255,0.2)', letterSpacing:1, marginTop:2 }}>S{i+1}</div>
                       </div>
-                    </>
-                  ) : (
-                    <div style={{ width:46, height:46, margin:'0 auto', border:'1.5px dashed rgba(255,255,255,0.1)',
-                      borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center',
-                      color:'rgba(255,255,255,0.12)', fontSize:'1.1rem' }}>?</div>
+                    ))}
+                  </div>
+                  {todayFull && todayTeamReady && (
+                    <div style={{ textAlign:'center', fontSize:'0.68rem', color:'rgba(255,255,255,0.5)', marginTop:8, fontWeight:700 }}>
+                      ⚡ 총 전투력 <span style={{ color:'#ffd600', fontWeight:900 }}>{myTotalPow.toLocaleString()}</span>
+                    </div>
                   )}
-                  <div style={{ fontSize:'0.5rem', color:'rgba(255,255,255,0.2)', letterSpacing:1, marginTop:2 }}>S{i+1}</div>
-                </div>
-              ))}
-            </div>
+                </>
+              );
+            })()}
             {(!todayFull || !todayTeamReady) && (
               <div style={{ textAlign:'center', fontSize:'0.7rem', color:'#ef5350', marginTop:8 }}>
                 팀 등록 탭에서{todayConfig.types.length > 0 ? ` ${todayConfig.types.map(t=>TYPE_META[t]?.label).join('·')} 타입 ` : ' '}포켓몬을 등록하세요
@@ -477,12 +497,13 @@ export default function BattleScreen() {
             if (filtered.length === 0) return <div style={{ textAlign:'center', color:'rgba(255,255,255,0.25)', padding:'50px 0' }}>
               오늘 {todayConfig.short}요일 팀을 등록한 상대가 없습니다
             </div>;
+            const mySyn  = getTeamSynergies(myTodayTeam, todayIdx);
+            const myPow  = myTodayTeam.reduce((s, p, i) => s + (p ? Math.round(calculatePower(p) * mySyn.multipliers[i]) : 0), 0);
             return (
               <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
                 {filtered.map(player => {
                   const oppSlots  = player.slots;
                   const oppPow    = oppSlots.reduce((s, p) => s + (p?.power || 0), 0);
-                  const myPow     = myTodayTeam.reduce((s, p) => s + (p ? calculatePower(p) : 0), 0);
                   const ratio     = myPow / (oppPow || 1);
                   const r2        = ratio * ratio;
                   const p1        = Math.min(0.98, Math.max(0.02, r2 / (r2 + 1)));
