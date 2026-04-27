@@ -189,56 +189,56 @@ const FIXED_SYNERGIES = [
     groupIds: [243, 244, 245],
     multiplier: 2.0, kind: 'group_any2',
   },
-  // ── 요일 배틀 전용 시너지 ──────────────────────────────────
-  // 월요일 (불꽃·물·얼음)
+  // ── 요일 배틀 전용 시너지 (요일당 타입조합 1 + 캐릭터조합 1) ──
+  // 월 🔥 — 불꽃·물·얼음
   { id: 'mon_trinity', name: '삼원소 공명', icon: '🌊', dayIdx: 0,
     desc: '불꽃+물+얼음 타입 각 1마리',
     requiredTypes: ['fire', 'water', 'ice'], multiplier: 1.8, kind: 'type_each' },
   { id: 'cold_heat', name: '냉열 충돌', icon: '❄️', dayIdx: 0,
     desc: '프리저 + 파이어',
     requiredIds: [144, 146], multiplier: 2.2, kind: 'fixed_all' },
-  // 화요일 (풀·독·벌레)
+  // 화 🌿 — 풀·독·벌레
   { id: 'tue_trinity', name: '자연 삼원소', icon: '🌿', dayIdx: 1,
     desc: '풀+독+벌레 타입 각 1마리',
     requiredTypes: ['grass', 'poison', 'bug'], multiplier: 1.8, kind: 'type_each' },
-  // 수요일 (전기·강철·바위)
+  { id: 'nature_pulse', name: '자연의 맥박', icon: '🌱', dayIdx: 1,
+    desc: '이상해풀 + 비리디온',
+    requiredIds: [3, 640], multiplier: 2.0, kind: 'fixed_all' },
+  // 수 ⚡ — 전기·강철·바위
   { id: 'wed_trinity', name: '강철 삼원소', icon: '⚡', dayIdx: 2,
     desc: '전기+강철+바위 타입 각 1마리',
     requiredTypes: ['electric', 'steel', 'rock'], multiplier: 1.8, kind: 'type_each' },
   { id: 'regi_duo', name: '레지 듀오', icon: '🪨', dayIdx: 2,
     desc: '레지록 + 레지스틸',
     requiredIds: [377, 379], multiplier: 2.2, kind: 'fixed_all' },
-  // 목요일 (격투·땅·비행)
+  // 목 🥊 — 격투·땅·비행
   { id: 'thu_trinity', name: '격지비 삼원소', icon: '🥊', dayIdx: 3,
     desc: '격투+땅+비행 타입 각 1마리',
     requiredTypes: ['fighting', 'ground', 'flying'], multiplier: 1.8, kind: 'type_each' },
-  { id: 'earth_sky', name: '하늘과 대지', icon: '🌏', dayIdx: 3,
-    desc: '그란돈 + 란드로스',
-    requiredIds: [383, 645], multiplier: 2.2, kind: 'fixed_all' },
   { id: 'swords_justice', name: '정의의 검객', icon: '⚔️', dayIdx: 3,
     desc: '코바르온·테라키온·비리디온 중 2마리',
     groupIds: [638, 639, 640], multiplier: 2.2, kind: 'group_any2' },
-  // 금요일 (에스퍼·고스트·악)
+  // 금 🔮 — 에스퍼·고스트·악
   { id: 'fri_trinity', name: '초자연 삼원소', icon: '🔮', dayIdx: 4,
     desc: '에스퍼+고스트+악 타입 각 1마리',
     requiredTypes: ['psychic', 'ghost', 'dark'], multiplier: 1.8, kind: 'type_each' },
   { id: 'lake_trio', name: '호수의 수호신', icon: '💫', dayIdx: 4,
     desc: '유크시·엠리트·아그놈 중 2마리',
     groupIds: [480, 481, 482], multiplier: 2.3, kind: 'group_any2' },
-  { id: 'dark_duo', name: '어둠의 이중주', icon: '👻', dayIdx: 4,
-    desc: '기라티나 + 뮤츠',
-    requiredIds: [487, 150], multiplier: 2.2, kind: 'fixed_all' },
-  // 토요일 (드래곤·페어리)
+  // 토 🐉 — 드래곤·페어리
+  { id: 'sat_trinity', name: '용과 요정', icon: '🐲', dayIdx: 5,
+    desc: '드래곤+페어리 타입 각 1마리',
+    requiredTypes: ['dragon', 'fairy'], multiplier: 1.8, kind: 'type_each' },
   { id: 'lati_duo', name: '라티 남매', icon: '🐉', dayIdx: 5,
     desc: '라티아스 + 라티오스',
     requiredIds: [380, 381], multiplier: 2.5, kind: 'fixed_all' },
-  { id: 'sky_dragon', name: '창공의 용왕', icon: '🌌', dayIdx: 5,
-    desc: '레쿠쟈 + 라티오스',
-    requiredIds: [384, 381], multiplier: 2.0, kind: 'fixed_all' },
-  // 일요일 (노말)
-  { id: 'creation_pair', name: '창조신의 각성', icon: '🌟', dayIdx: 6,
-    desc: '아르세우스 + 레지기가스',
-    requiredIds: [493, 486], multiplier: 2.5, kind: 'fixed_all' },
+  // 일 🐰 — 노말
+  { id: 'normal_kingdom', name: '노말의 왕도', icon: '👑', dayIdx: 6,
+    desc: '3마리 모두 노말 타입',
+    requiredType: 'normal', multiplier: 2.0, kind: 'type_all' },
+  { id: 'normal_giants', name: '노말 거인단', icon: '💪', dayIdx: 6,
+    desc: '레지기가스 + 잠만보',
+    requiredIds: [486, 143], multiplier: 2.2, kind: 'fixed_all' },
 ];
 
 // 조합표 카탈로그 (UI 표시용)
@@ -253,21 +253,21 @@ export const SYNERGY_CATALOG = [
   { fixedId: 'legend_beasts',   name: '전설의 개',    icon: '🐾', desc: '라이코 · 엔테이 · 스이쿤 중 2마리', bonus: '두 마리 ×2.0',   color: '#ffcc80' },
   { fixedId: 'type3',           name: '삼색 공명',    icon: '🔱', desc: '3마리 모두 같은 타입',             bonus: '전체 ×1.5',       color: '#ce93d8' },
   { fixedId: 'type2',           name: '듀오 공명',    icon: '🔗', desc: '2마리가 같은 타입 보유',           bonus: '해당 2마리 ×1.2', color: '#90caf9' },
-  // 요일 배틀 전용
-  { fixedId: 'mon_trinity',    name: '삼원소 공명',   icon: '🌊', desc: '불꽃+물+얼음 각 1마리',             bonus: '전체 ×1.8',       color: '#F08030', dayIdx: 0 },
-  { fixedId: 'cold_heat',      name: '냉열 충돌',     icon: '❄️', desc: '프리저 + 파이어',                  bonus: '두 마리 ×2.2',    color: '#98d8d8', dayIdx: 0 },
-  { fixedId: 'tue_trinity',    name: '자연 삼원소',   icon: '🌿', desc: '풀+독+벌레 각 1마리',              bonus: '전체 ×1.8',       color: '#78C850', dayIdx: 1 },
-  { fixedId: 'wed_trinity',    name: '강철 삼원소',   icon: '⚡', desc: '전기+강철+바위 각 1마리',           bonus: '전체 ×1.8',       color: '#F8D030', dayIdx: 2 },
-  { fixedId: 'regi_duo',       name: '레지 듀오',     icon: '🪨', desc: '레지록 + 레지스틸',                bonus: '두 마리 ×2.2',    color: '#b5b5c0', dayIdx: 2 },
-  { fixedId: 'thu_trinity',    name: '격지비 삼원소', icon: '🥊', desc: '격투+땅+비행 각 1마리',            bonus: '전체 ×1.8',       color: '#C03028', dayIdx: 3 },
-  { fixedId: 'earth_sky',      name: '하늘과 대지',   icon: '🌏', desc: '그란돈 + 란드로스',                bonus: '두 마리 ×2.2',    color: '#E0C068', dayIdx: 3 },
-  { fixedId: 'swords_justice', name: '정의의 검객',   icon: '⚔️', desc: '코바르온·테라키온·비리디온 중 2',    bonus: '두 마리 ×2.2',    color: '#C03028', dayIdx: 3 },
-  { fixedId: 'fri_trinity',    name: '초자연 삼원소', icon: '🔮', desc: '에스퍼+고스트+악 각 1마리',         bonus: '전체 ×1.8',       color: '#F85888', dayIdx: 4 },
-  { fixedId: 'lake_trio',      name: '호수의 수호신', icon: '💫', desc: '유크시·엠리트·아그놈 중 2',          bonus: '두 마리 ×2.3',    color: '#a78bfa', dayIdx: 4 },
-  { fixedId: 'dark_duo',       name: '어둠의 이중주', icon: '👻', desc: '기라티나 + 뮤츠',                  bonus: '두 마리 ×2.2',    color: '#7038F8', dayIdx: 4 },
-  { fixedId: 'lati_duo',       name: '라티 남매',     icon: '🐉', desc: '라티아스 + 라티오스',              bonus: '두 마리 ×2.5',    color: '#F85888', dayIdx: 5 },
-  { fixedId: 'sky_dragon',     name: '창공의 용왕',   icon: '🌌', desc: '레쿠쟈 + 라티오스',               bonus: '두 마리 ×2.0',    color: '#7038F8', dayIdx: 5 },
-  { fixedId: 'creation_pair',  name: '창조신의 각성', icon: '🌟', desc: '아르세우스 + 레지기가스',           bonus: '두 마리 ×2.5',    color: '#FF6B00', dayIdx: 6 },
+  // 요일 배틀 전용 (요일당 2종)
+  { fixedId: 'mon_trinity',    name: '삼원소 공명',   icon: '🌊', desc: '불꽃+물+얼음 각 1마리',            bonus: '전체 ×1.8',    color: '#F08030', dayIdx: 0 },
+  { fixedId: 'cold_heat',      name: '냉열 충돌',     icon: '❄️', desc: '프리저 + 파이어',                 bonus: '두 마리 ×2.2', color: '#98d8d8', dayIdx: 0 },
+  { fixedId: 'tue_trinity',    name: '자연 삼원소',   icon: '🌿', desc: '풀+독+벌레 각 1마리',             bonus: '전체 ×1.8',    color: '#78C850', dayIdx: 1 },
+  { fixedId: 'nature_pulse',   name: '자연의 맥박',   icon: '🌱', desc: '이상해풀 + 비리디온',              bonus: '두 마리 ×2.0', color: '#4caf50', dayIdx: 1 },
+  { fixedId: 'wed_trinity',    name: '강철 삼원소',   icon: '⚡', desc: '전기+강철+바위 각 1마리',          bonus: '전체 ×1.8',    color: '#F8D030', dayIdx: 2 },
+  { fixedId: 'regi_duo',       name: '레지 듀오',     icon: '🪨', desc: '레지록 + 레지스틸',               bonus: '두 마리 ×2.2', color: '#b5b5c0', dayIdx: 2 },
+  { fixedId: 'thu_trinity',    name: '격지비 삼원소', icon: '🥊', desc: '격투+땅+비행 각 1마리',           bonus: '전체 ×1.8',    color: '#C03028', dayIdx: 3 },
+  { fixedId: 'swords_justice', name: '정의의 검객',   icon: '⚔️', desc: '코바르온·테라키온·비리디온 중 2',   bonus: '두 마리 ×2.2', color: '#ff8a65', dayIdx: 3 },
+  { fixedId: 'fri_trinity',    name: '초자연 삼원소', icon: '🔮', desc: '에스퍼+고스트+악 각 1마리',        bonus: '전체 ×1.8',    color: '#F85888', dayIdx: 4 },
+  { fixedId: 'lake_trio',      name: '호수의 수호신', icon: '💫', desc: '유크시·엠리트·아그놈 중 2',         bonus: '두 마리 ×2.3', color: '#a78bfa', dayIdx: 4 },
+  { fixedId: 'sat_trinity',    name: '용과 요정',     icon: '🐲', desc: '드래곤+페어리 각 1마리',           bonus: '전체 ×1.8',    color: '#7038F8', dayIdx: 5 },
+  { fixedId: 'lati_duo',       name: '라티 남매',     icon: '🐉', desc: '라티아스 + 라티오스',             bonus: '두 마리 ×2.5', color: '#F85888', dayIdx: 5 },
+  { fixedId: 'normal_kingdom', name: '노말의 왕도',   icon: '👑', desc: '3마리 모두 노말 타입',             bonus: '전체 ×2.0',    color: '#A8A878', dayIdx: 6 },
+  { fixedId: 'normal_giants',  name: '노말 거인단',   icon: '💪', desc: '레지기가스 + 잠만보',              bonus: '두 마리 ×2.2', color: '#c5a04a', dayIdx: 6 },
 ];
 
 export function getTeamSynergies(team) {
@@ -295,6 +295,20 @@ export function getTeamSynergies(team) {
           .filter((_, i) => !typeCovered[i])
           .map(t => (TYPE_META[t] || { label: t }).label + ' 타입');
         partial.push({ ...syn, foundCount: typeCovered.filter(Boolean).length, missing });
+      }
+      continue;
+    }
+    if (syn.kind === 'type_all') {
+      const filledTeam = team.filter(Boolean);
+      const allHaveType = filledTeam.length === 3 &&
+        filledTeam.every(p => (POKEMON_TYPES[p.pokemonId] || ['normal']).includes(syn.requiredType));
+      if (allHaveType) {
+        active.push({ ...syn, appliedSlots: [0, 1, 2] });
+        [0, 1, 2].forEach(i => { multipliers[i] *= syn.multiplier; });
+      } else {
+        const covered = filledTeam.filter(p => (POKEMON_TYPES[p.pokemonId] || ['normal']).includes(syn.requiredType)).length;
+        const missing = (TYPE_META[syn.requiredType] || { label: syn.requiredType }).label + ' 타입 필요';
+        partial.push({ ...syn, foundCount: covered, missing: [missing] });
       }
       continue;
     }
