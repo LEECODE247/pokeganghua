@@ -6,7 +6,7 @@ async function sha256(str) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-export default function LoginScreen({ onLogin }) {
+export default function LoginScreen({ onLogin, kickedOut }) {
   const [nickname, setNickname]   = useState('');
   const [password, setPassword]   = useState('');
   const [isNew, setIsNew]         = useState(false);
@@ -55,6 +55,15 @@ export default function LoginScreen({ onLogin }) {
         background: 'var(--surface)', borderRadius: 20, padding: '36px 28px',
         maxWidth: 360, width: '100%', border: '1px solid var(--border)', textAlign: 'center',
       }}>
+        {kickedOut && (
+          <div style={{
+            background: 'rgba(239,83,80,0.12)', border: '1px solid #ef5350',
+            borderRadius: 10, padding: '10px 14px', marginBottom: 16,
+            fontSize: '0.82rem', color: '#ef5350', fontWeight: 700,
+          }}>
+            📵 다른 기기에서 로그인되어 자동 로그아웃되었습니다.
+          </div>
+        )}
         <div style={{ fontSize: '3rem', marginBottom: 8 }}>🎮</div>
         <div style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: 4 }}>포켓가챠</div>
         <div style={{ fontSize: '0.85rem', color: 'var(--text2)', marginBottom: 28 }}>

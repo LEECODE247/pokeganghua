@@ -164,6 +164,31 @@ const FIXED_SYNERGIES = [
     arceusId: 493,
     multiplier: 2, kind: 'arceus',
   },
+  // ── ★4 듀오 시너지 ──────────────────────────────────────────
+  {
+    id: 'psychic_duo', name: '에스퍼의 쌍벽', icon: '🔮',
+    desc: '뮤 + 뮤츠',
+    requiredIds: [150, 151],
+    multiplier: 2.5, kind: 'fixed_all',
+  },
+  {
+    id: 'sky_lords', name: '천공의 지배자', icon: '🌊',
+    desc: '루기아 + 칠색조',
+    requiredIds: [249, 250],
+    multiplier: 2.5, kind: 'fixed_all',
+  },
+  {
+    id: 'spacetime', name: '시공의 신', icon: '⚖️',
+    desc: '디아루가 + 펄기아',
+    requiredIds: [483, 484],
+    multiplier: 2.8, kind: 'fixed_all',
+  },
+  {
+    id: 'legend_beasts', name: '전설의 개', icon: '🐾',
+    desc: '라이코 · 엔테이 · 스이쿤 중 2마리',
+    groupIds: [243, 244, 245],
+    multiplier: 2.0, kind: 'group_any2',
+  },
 ];
 
 // 조합표 카탈로그 (UI 표시용)
@@ -172,6 +197,10 @@ export const SYNERGY_CATALOG = [
   { fixedId: 'gen1_starters',   name: '1세대 삼인방', icon: '1️⃣', desc: '이상해풀 + 거북왕 + 리자몽',       bonus: '전체 ×3',         color: '#81c784' },
   { fixedId: 'gen2_starters',   name: '2세대 삼인방', icon: '2️⃣', desc: '메가니움 + 장크로다일 + 블레이범', bonus: '전체 ×3',         color: '#4db6ac' },
   { fixedId: 'divine_blessing', name: '신의 가호',    icon: '✨', desc: '아르세우스 + 임의 2마리',          bonus: '나머지 ×2',       color: '#ffb74d' },
+  { fixedId: 'psychic_duo',     name: '에스퍼의 쌍벽', icon: '🔮', desc: '뮤 + 뮤츠 (★4 듀오)',            bonus: '두 마리 ×2.5',    color: '#ce93d8' },
+  { fixedId: 'sky_lords',       name: '천공의 지배자', icon: '🌊', desc: '루기아 + 칠색조 (★4 듀오)',        bonus: '두 마리 ×2.5',    color: '#4fc3f7' },
+  { fixedId: 'spacetime',       name: '시공의 신',    icon: '⚖️', desc: '디아루가 + 펄기아 (★4 듀오)',      bonus: '두 마리 ×2.8',    color: '#b39ddb' },
+  { fixedId: 'legend_beasts',   name: '전설의 개',    icon: '🐾', desc: '라이코 · 엔테이 · 스이쿤 중 2마리', bonus: '두 마리 ×2.0',   color: '#ffcc80' },
   { fixedId: 'type3',           name: '삼색 공명',    icon: '🔱', desc: '3마리 모두 같은 타입',             bonus: '전체 ×1.5',       color: '#ce93d8' },
   { fixedId: 'type2',           name: '듀오 공명',    icon: '🔗', desc: '2마리가 같은 타입 보유',           bonus: '해당 2마리 ×1.2', color: '#90caf9' },
 ];
@@ -185,8 +214,27 @@ export function getTeamSynergies(team) {
   const ids = team.map(p => p?.pokemonId ?? null);
   const filled = ids.filter(id => id !== null).length;
 
-  // ── 고정 시너지 (전설의새, 스타터, 신의가호) ─────────────────
+  // ── 고정 시너지 ────────────────────────────────────────────
   for (const syn of FIXED_SYNERGIES) {
+    if (syn.kind === 'group_any2') {
+      // 그룹 중 2마리 이상 있으면 발동
+      const foundSlots = ids.reduce((acc, id, i) => {
+        if (id !== null && syn.groupIds.includes(id)) acc.push(i);
+        return acc;
+      }, []);
+      if (foundSlots.length >= 2) {
+        const appliedSlots = foundSlots.slice(0, 2);
+        active.push({ ...syn, appliedSlots });
+        appliedSlots.forEach(i => { multipliers[i] *= syn.multiplier; });
+      } else {
+        const missingNames = syn.groupIds
+          .filter(reqId => !ids.includes(reqId))
+          .slice(0, 2 - foundSlots.length)
+          .map(id => POKEMON_NAMES[id] || `#${id}`);
+        partial.push({ ...syn, foundCount: foundSlots.length, missing: missingNames });
+      }
+      continue;
+    }
     if (syn.kind === 'arceus') {
       const arcIdx = ids.indexOf(syn.arceusId);
       if (arcIdx !== -1 && filled === 3) {
