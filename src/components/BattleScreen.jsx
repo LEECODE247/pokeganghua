@@ -5,6 +5,8 @@ import {
   calculatePower, calculateSellPrice, formatCoins, getTeamSynergies, SYNERGY_CATALOG,
   getTypeAdvantage, createPokemonInstance,
 } from '../utils/gameUtils.js';
+
+const DAY_SYNERGY_CATALOG = SYNERGY_CATALOG.filter(s => s.dayIdx !== undefined);
 import { POKEMON_TYPES, TYPE_META, POKEMON_TYPE, TYPE_MOVES, DAY_TYPES, ALL_POKEMON_BY_RARITY } from '../data/pokemonData.js';
 import {
   updateDayBattleTeam, fetchDayBattlePlayers, recordDayBattle, fetchTodayBattleRecords,
@@ -570,6 +572,30 @@ export default function BattleScreen() {
                 </div>
               </div>
 
+              {/* 요일 전용 시너지 조합표 */}
+              {(() => {
+                const daySyns = DAY_SYNERGY_CATALOG.filter(s => s.dayIdx === registerDay);
+                if (daySyns.length === 0) return null;
+                return (
+                  <div style={{
+                    background:'rgba(255,255,255,0.02)', border:`1px solid ${DAY_TYPES[registerDay].color}22`,
+                    borderRadius:10, padding:'8px 12px', marginBottom:12,
+                  }}>
+                    <div style={{ fontSize:'0.62rem', fontWeight:800, color:'rgba(255,255,255,0.35)', letterSpacing:1, marginBottom:6 }}>
+                      ✨ {DAY_TYPES[registerDay].short}요일 특별 시너지
+                    </div>
+                    {daySyns.map(s => (
+                      <div key={s.fixedId} style={{ display:'flex', alignItems:'center', gap:6, marginBottom:3 }}>
+                        <span style={{ fontSize:'0.8rem', width:20, textAlign:'center' }}>{s.icon}</span>
+                        <span style={{ fontSize:'0.63rem', fontWeight:800, color: s.color || '#ffd600', flex:1 }}>{s.name}</span>
+                        <span style={{ fontSize:'0.58rem', color:'rgba(255,255,255,0.3)', flex:2 }}>{s.desc}</span>
+                        <span style={{ fontSize:'0.62rem', fontWeight:800, color:'#ffd600', flexShrink:0 }}>{s.bonus}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
               {/* 슬롯 3개 */}
               <div style={{ display:'flex', gap:8, marginBottom:14 }}>
                 {[0,1,2].map(i => {
@@ -584,6 +610,50 @@ export default function BattleScreen() {
                   );
                 })}
               </div>
+
+              {/* 팀 구성 제한 안내 */}
+              <div style={{
+                background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)',
+                borderRadius:10, padding:'8px 12px', marginBottom:10, fontSize:'0.65rem', color:'rgba(255,255,255,0.5)',
+              }}>
+                <span style={{ color:'rgba(255,255,255,0.7)', fontWeight:800 }}>팀 구성 제한 </span>
+                <span style={{ color:'#e040fb' }}>★5</span> 단독 1마리 (★4 불가)&nbsp;·&nbsp;또는&nbsp;
+                <span style={{ color:'#42a5f5' }}>★4</span> 최대 2마리 (★5 불가)
+              </div>
+
+              {/* 시너지 미리보기 */}
+              {(() => {
+                const regIds = dayBattleTeams[registerDay] || [null,null,null];
+                const regPokemon = regIds.map(id => id ? inventory.find(p => p.instanceId === id) : null);
+                const filledCount = regPokemon.filter(Boolean).length;
+                if (filledCount === 0) return null;
+                const syn = getTeamSynergies(regPokemon);
+                if (syn.active.length === 0 && syn.partial.length === 0) return null;
+                return (
+                  <div style={{
+                    background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)',
+                    borderRadius:10, padding:'10px 12px', marginBottom:10,
+                  }}>
+                    <div style={{ fontSize:'0.65rem', fontWeight:800, color:'rgba(255,255,255,0.45)', letterSpacing:1, marginBottom:6 }}>🔗 시너지</div>
+                    {syn.active.map(s => (
+                      <div key={s.id} style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
+                        <span style={{ fontSize:'0.85rem' }}>{s.icon}</span>
+                        <span style={{ fontSize:'0.68rem', fontWeight:800, color: s.color || '#ffd600' }}>{s.name}</span>
+                        <span style={{ fontSize:'0.62rem', color:'#4caf50', marginLeft:'auto', fontWeight:700 }}>×{s.multiplier} ✅</span>
+                      </div>
+                    ))}
+                    {syn.partial.map(s => (
+                      <div key={s.id} style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4, opacity:0.55 }}>
+                        <span style={{ fontSize:'0.85rem' }}>{s.icon}</span>
+                        <span style={{ fontSize:'0.68rem', fontWeight:700, color:'rgba(255,255,255,0.5)' }}>{s.name}</span>
+                        <span style={{ fontSize:'0.58rem', color:'rgba(255,255,255,0.3)', marginLeft:'auto' }}>
+                          {s.missing.slice(0,2).join('·')} 필요
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
 
               {/* 등록 완료 버튼 */}
               <button
