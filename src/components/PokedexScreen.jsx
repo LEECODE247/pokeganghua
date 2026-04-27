@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useGame } from '../App.jsx';
-import { ALL_POKEMON_BY_RARITY, GEN1_IDS, GEN2_IDS } from '../data/pokemonData.js';
+import { ALL_POKEMON_BY_RARITY, GEN1_IDS, GEN2_IDS, POKEMON_TYPES, TYPE_META } from '../data/pokemonData.js';
 import { EVOLUTIONS } from '../data/evolutionData.js';
 import { getPokemonImageUrl, getPokemonShinyImageUrl, getPokemonName, getRarityColor } from '../utils/gameUtils.js';
 
@@ -403,6 +403,14 @@ export default function PokedexScreen() {
                           }}>
                             {isCaught ? getPokemonName(id) : '???'}
                           </div>
+                          {isCaught && (
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginTop: 3, flexWrap: 'wrap' }}>
+                              {(POKEMON_TYPES[id] || ['normal']).map(t => {
+                                const meta = TYPE_META[t] || { label: t, color: '#888' };
+                                return <span key={t} style={{ background: meta.color, color: '#fff', fontSize: '0.42rem', fontWeight: 800, padding: '1px 4px', borderRadius: 6 }}>{meta.label}</span>;
+                              })}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -523,6 +531,14 @@ export default function PokedexScreen() {
                         }}>
                           {isCaught ? getPokemonName(id) : '???'}
                         </div>
+                        {isCaught && (
+                          <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginTop: 3, flexWrap: 'wrap' }}>
+                            {(POKEMON_TYPES[id] || ['normal']).map(t => {
+                              const meta = TYPE_META[t] || { label: t, color: '#888' };
+                              return <span key={t} style={{ background: meta.color, color: '#fff', fontSize: '0.42rem', fontWeight: 800, padding: '1px 4px', borderRadius: 6 }}>{meta.label}</span>;
+                            })}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
