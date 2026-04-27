@@ -405,10 +405,13 @@ export default function BattleScreen() {
                 <div key={i} style={{ flex:1, textAlign:'center' }}>
                   {myTodayTeam[i] ? (
                     <>
-                      <img src={getPokemonImageUrl(myTodayTeam[i].pokemonId)}
+                      <img src={myTodayTeam[i].isShiny ? getPokemonShinyImageUrl(myTodayTeam[i].pokemonId) : getPokemonImageUrl(myTodayTeam[i].pokemonId)}
                         style={{ width:46, height:46, imageRendering:'pixelated', objectFit:'contain',
-                          filter:`drop-shadow(0 0 6px ${getRarityColor(myTodayTeam[i].rarity)}88)` }} alt="" />
+                          filter: myTodayTeam[i].isShiny
+                            ? 'drop-shadow(0 0 6px rgba(0,229,255,0.9))'
+                            : `drop-shadow(0 0 6px ${getRarityColor(myTodayTeam[i].rarity)}88)` }} alt="" />
                       <div style={{ fontSize:'0.56rem', color:getRarityColor(myTodayTeam[i].rarity), marginTop:2, fontWeight:700 }}>
+                        {myTodayTeam[i].isShiny && <span style={{ color:'#00e5ff', marginRight:2 }}>✦</span>}
                         {'★'.repeat(myTodayTeam[i].rarity)}
                       </div>
                     </>
@@ -1013,7 +1016,9 @@ export default function BattleScreen() {
             <div style={{ textAlign:'center' }}>
               <div style={{ display:'flex', gap:4 }}>
                 {myTodayTeam.filter(Boolean).map((p, i) => (
-                  <img key={i} src={getPokemonImageUrl(p.pokemonId)} style={{ width:40, height:40, imageRendering:'pixelated', objectFit:'contain' }} alt="" />
+                  <img key={i} src={p.isShiny ? getPokemonShinyImageUrl(p.pokemonId) : getPokemonImageUrl(p.pokemonId)}
+                    style={{ width:40, height:40, imageRendering:'pixelated', objectFit:'contain',
+                      filter: p.isShiny ? 'drop-shadow(0 0 6px rgba(0,229,255,0.8))' : undefined }} alt="" />
                 ))}
               </div>
               <div style={{ fontSize:'0.65rem', color:'rgba(255,255,255,0.35)', marginTop:4, letterSpacing:1 }}>MY TEAM</div>
