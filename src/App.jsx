@@ -1,8 +1,8 @@
-import React, { useReducer, useEffect, useState, useRef, createContext, useContext, Component } from 'react';
+import React, { useReducer, useEffect, useState, useRef, useCallback, createContext, useContext, Component } from 'react';
 import { generateWildPokemon, calculateSellPrice, getEnhanceRate, getEnhanceFailEffect, getEnhanceCost, createPokemonInstance, SELL_ENHANCE_BONUS } from './utils/gameUtils.js';
 import { BALL_CONFIG, POKEMON_NAMES, ALL_POKEMON_BY_RARITY, GEN1_IDS, GEN2_IDS, POKEMON_RARITY_MAP, GYM_CONFIG } from './data/pokemonData.js';
 import { EVOLUTIONS } from './data/evolutionData.js';
-import { loadGameState, saveGameState } from './supabase.js';
+import { loadGameState, saveGameState, saveGameStateOnUnload, setSessionToken, getSessionToken } from './supabase.js';
 import HUD from './components/HUD.jsx';
 import MainScreen from './components/MainScreen.jsx';
 import CaptureScreen from './components/CaptureScreen.jsx';
@@ -28,6 +28,7 @@ const INITIAL_STATE = {
   enhanceResult: null,
   enhanceFailStack: 0,
   battleTeam: [null, null, null], // [instanceId|null, instanceId|null, instanceId|null]
+  dayBattleTeams: [[null,null,null],[null,null,null],[null,null,null],[null,null,null],[null,null,null],[null,null,null],[null,null,null]],
   gymTeam: [null, null, null],   // 체육관 전용 팀 (미사용, 하위호환)
   gymMap: 'forest',
   gymSelectedPokemonId: null,
@@ -213,6 +214,25 @@ function gameReducer(state, action) {
       return { ...state, battleTeam: newTeam };
     }
 
+    case 'SET_DAY_BATTLE_SLOT': {
+      const { day, slot, pokemonId } = action;
+      const newDayTeams = state.dayBattleTeams.map((t, d) =>
+        d === day ? t.map((id, s) => s === slot ? pokemonId : id) : t
+      );
+      return { ...state, dayBattleTeams: newDayTeams };
+    }
+
+    case 'CLAIM_DAY_BATTLE_REWARD':
+      return { ...state, fragments: state.fragments + action.fragments };
+
+    case 'CLAIM_WEEKLY_BATTLE_REWARD': {
+      const { fragments, pokemon } = action;
+      const newInv = pokemon ? [...state.inventory, pokemon] : state.inventory;
+      const newDex = pokemon && !state.pokedex.includes(pokemon.pokemonId)
+        ? [...state.pokedex, pokemon.pokemonId] : state.pokedex;
+      return { ...state, fragments: state.fragments + fragments, inventory: newInv, pokedex: newDex };
+    }
+
     case 'SET_GYM_SLOT': {
       const newTeam = [...state.gymTeam];
       newTeam[action.slot] = action.pokemonId;
@@ -265,6 +285,7 @@ function gameReducer(state, action) {
         battleTeam: state.battleTeam.map(id => id === action.pokemonId ? null : id),
         gymTeam: state.gymTeam.map(id => id === action.pokemonId ? null : id),
         gymPokemonCooldowns: newGymPokemonCooldowns,
+        dayBattleTeams: state.dayBattleTeams.map(t => t.map(id => id === action.pokemonId ? null : id)),
       };
     }
 
@@ -291,6 +312,7 @@ function gameReducer(state, action) {
         battleTeam: state.battleTeam.map(id => idSet.has(id) ? null : id),
         gymTeam: state.gymTeam.map(id => idSet.has(id) ? null : id),
         gymPokemonCooldowns: newGymPokemonCooldowns2,
+        dayBattleTeams: state.dayBattleTeams.map(t => t.map(id => idSet.has(id) ? null : id)),
       };
     }
 
@@ -450,9 +472,10 @@ function setStoredSession(session) {
 // ── 로컬 게임 상태 백업 (새로고침/탭 닫기 대비) ──
 function saveStateLocal(accountId, state) {
   try {
+    const savedAt = Date.now();
     localStorage.setItem(
       `pokemonGacha_state_${accountId}`,
-      JSON.stringify({ state, savedAt: Date.now() })
+      JSON.stringify({ state: { ...state, _savedAt: savedAt }, savedAt })
     );
   } catch {}
 }
@@ -468,24 +491,37 @@ function clearStoredSession() {
   localStorage.removeItem('pokemonGacha_session');
 }
 
+function getLocalToken(accountId) {
+  return localStorage.getItem(`pokemonGacha_token_${accountId}`);
+}
+function setLocalToken(accountId, token) {
+  localStorage.setItem(`pokemonGacha_token_${accountId}`, token);
+}
+function genToken() {
+  return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
+}
+
 // ── 루트 — 로딩 → 로그인 → 게임 ──────────────────────────
 export default function App() {
-  // phase: 'loading' | 'login' | 'game'
   const [phase, setPhase] = useState('loading');
-  const [session, setSession] = useState(null); // { accountId, nickname, initialState }
+  const [session, setSession] = useState(null);
+  const [kickedOut, setKickedOut] = useState(false);
 
   useEffect(() => {
     const stored = getStoredSession();
     if (!stored) { setPhase('login'); return; }
 
-    // Supabase가 항상 최우선 — 실패 시에만 localStorage 폴백
-    loadGameState(stored.accountId)
-      .then(gameState => {
+    const load = async () => {
+      try {
+        const gameState = await loadGameState(stored.accountId);
         const finalState = gameState ?? loadStateLocal(stored.accountId)?.state;
+        // 새 토큰 발급 — 이 기기가 활성 세션 점유
+        const token = genToken();
+        setLocalToken(stored.accountId, token);
+        await setSessionToken(stored.accountId, token);
         setSession({ ...stored, initialState: finalState });
         setPhase('game');
-      })
-      .catch(() => {
+      } catch {
         const local = loadStateLocal(stored.accountId);
         if (local?.state) {
           setSession({ ...stored, initialState: local.state });
@@ -494,27 +530,33 @@ export default function App() {
           clearStoredSession();
           setPhase('login');
         }
-      });
+      }
+    };
+    setTimeout(load, 300);
   }, []);
 
   function handleLogin({ accountId, nickname }) {
     const s = { accountId, nickname };
     setStoredSession(s);
-    loadGameState(accountId).then(gameState => {
+    loadGameState(accountId).then(async gameState => {
       const finalState = gameState ?? loadStateLocal(accountId)?.state;
+      const token = genToken();
+      setLocalToken(accountId, token);
+      await setSessionToken(accountId, token);
       setSession({ ...s, initialState: finalState });
       setPhase('game');
     });
   }
 
-  function handleLogout() {
+  function handleLogout(kicked = false) {
     clearStoredSession();
     setSession(null);
+    setKickedOut(kicked);
     setPhase('login');
   }
 
   if (phase === 'loading') return <LoadingScreen />;
-  if (phase === 'login')   return <LoginScreen onLogin={handleLogin} />;
+  if (phase === 'login')   return <LoginScreen onLogin={handleLogin} kickedOut={kickedOut} />;
 
   return (
     <ErrorBoundary>
@@ -557,31 +599,68 @@ function GameApp({ accountId, nickname, initialState, onLogout }) {
   };
 
   const [state, dispatch] = useReducer(gameReducer, safeState);
-  const saveTimer = useRef(null);
+  const isFirstRender = useRef(true);
+  const stateRef      = useRef(state);
+  const hasChanged    = useRef(false);
+  stateRef.current = state;
 
-  // 상태 변경 시 localStorage 즉시 저장 + Supabase 1초 디바운스
+  // dispatch 래핑: reducer를 직접 실행해 stateRef를 React 리렌더 전에 동기 업데이트
+  // → pagehide가 dispatch와 리렌더 사이에 발생해도 최신 state로 저장 가능
+  const wrappedDispatch = useCallback((action) => {
+    stateRef.current = gameReducer(stateRef.current, action);
+    hasChanged.current = true;
+    dispatch(action);
+  }, []);
+
+  // 30초마다 세션 토큰 검증 — 다른 기기 로그인 시 강제 로그아웃
   useEffect(() => {
+    const check = async () => {
+      const dbToken    = await getSessionToken(accountId).catch(() => null);
+      const localToken = getLocalToken(accountId);
+      if (dbToken && localToken && dbToken !== localToken) {
+        onLogout(true);
+      }
+    };
+    const iv = setInterval(check, 30000);
+    return () => clearInterval(iv);
+  }, [accountId, onLogout]);
+
+  const [saveStatus, setSaveStatus] = useState(null); // 'saving' | 'ok' | 'fail'
+  const saveStatusTimer = useRef(null);
+
+  // 상태 변경 시 localStorage + Supabase 즉시 저장 (첫 마운트 스킵)
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
     saveStateLocal(accountId, state);
-    clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      saveGameState(accountId, { nickname, ...state, _savedAt: Date.now() });
-    }, 1000);
-    return () => clearTimeout(saveTimer.current);
+    setSaveStatus('saving');
+    clearTimeout(saveStatusTimer.current);
+    saveGameState(accountId, { nickname, ...state, _savedAt: Date.now() })
+      .then(() => {
+        setSaveStatus('ok');
+        saveStatusTimer.current = setTimeout(() => setSaveStatus(null), 2000);
+      })
+      .catch(() => {
+        setSaveStatus('fail');
+        saveStatusTimer.current = setTimeout(() => setSaveStatus(null), 3000);
+      });
   }, [state, accountId]);
 
-  // 탭/창 닫기 전 즉시 저장 (localStorage는 동기라 항상 성공, Supabase는 시도)
+  // 탭 닫기 / 앱 전환 시 — stateRef로 항상 최신 state 저장 (useEffect 타이밍 무관)
   useEffect(() => {
     const flush = () => {
-      clearTimeout(saveTimer.current);
-      saveStateLocal(accountId, state);
-      saveGameState(accountId, { nickname, ...state, _savedAt: Date.now() });
+      if (!hasChanged.current) return;
+      const s = stateRef.current;
+      saveStateLocal(accountId, s);
+      saveGameStateOnUnload(accountId, { nickname, ...s, _savedAt: Date.now() });
     };
-    window.addEventListener('beforeunload', flush);
-    return () => window.removeEventListener('beforeunload', flush);
-  }, [state, accountId]);
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') flush();
+    });
+    return () => window.removeEventListener('pagehide', flush);
+  }, [accountId, nickname]);
 
   function saveNow(latestState) {
-    clearTimeout(saveTimer.current);
     const s = latestState ?? state;
     saveGameState(accountId, { nickname, ...s, _savedAt: Date.now() });
   }
@@ -597,9 +676,22 @@ function GameApp({ accountId, nickname, initialState, onLogout }) {
   };
 
   return (
-    <GameContext.Provider value={{ state, dispatch, nickname, accountId, onLogout, saveNow }}>
+    <GameContext.Provider value={{ state, dispatch: wrappedDispatch, nickname, accountId, onLogout, saveNow }}>
       <div className="app">
         <HUD />
+        {saveStatus && (
+          <div style={{
+            position: 'fixed', bottom: 8, right: 8, zIndex: 9999,
+            padding: '4px 10px', borderRadius: 8, fontSize: '0.7rem', fontWeight: 800,
+            background: saveStatus === 'saving' ? 'rgba(99,102,241,0.9)'
+              : saveStatus === 'ok'   ? 'rgba(76,175,80,0.9)'
+              : 'rgba(239,83,80,0.9)',
+            color: '#fff', letterSpacing: 1,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+          }}>
+            {saveStatus === 'saving' ? '💾 저장 중...' : saveStatus === 'ok' ? '✅ 저장됨' : '❌ 저장 실패'}
+          </div>
+        )}
         <div className="screen-container">
           {screens[state.screen] || <MainScreen />}
         </div>

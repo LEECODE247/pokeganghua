@@ -184,7 +184,106 @@ SET
 
 ---
 
-## 6. 특정 유저 삭제
+## 6. 요일 배틀 테이블 생성 (최초 1회)
+
+```sql
+-- 요일별 배틀팀 등록 (account_id + day_of_week 복합 PK)
+create table if not exists day_battle_teams (
+  account_id  uuid references accounts(id) on delete cascade,
+  day_of_week int  not null,  -- 0=월, 1=화, 2=수, 3=목, 4=금, 5=토, 6=일
+  slots       jsonb not null default '[]',
+  updated_at  timestamptz default now(),
+  primary key (account_id, day_of_week)
+);
+alter table day_battle_teams enable row level security;
+create policy "all" on day_battle_teams for all using (true) with check (true);
+
+-- 배틀 결과 기록
+create table if not exists battle_records (
+  id           uuid default gen_random_uuid() primary key,
+  attacker_id  uuid references accounts(id),
+  defender_id  uuid references accounts(id),
+  attacker_won bool not null,
+  day_of_week  int  not null,
+  battle_date  date not null default current_date,
+  created_at   timestamptz default now()
+);
+alter table battle_records enable row level security;
+create policy "all" on battle_records for all using (true) with check (true);
+create index on battle_records(battle_date);
+create index on battle_records(attacker_id);
+create index on battle_records(defender_id);
+
+-- 주간 누적 점수 (이기면 +3, 지면 -1, 최소 0)
+create table if not exists weekly_scores (
+  account_id  uuid references accounts(id) on delete cascade,
+  week_start  date not null,  -- 해당 주 월요일 날짜
+  score       int  not null default 0,
+  wins        int  not null default 0,
+  losses      int  not null default 0,
+  updated_at  timestamptz default now(),
+  primary key (account_id, week_start)
+);
+alter table weekly_scores enable row level security;
+create policy "all" on weekly_scores for all using (true) with check (true);
+
+-- 보상 수령 기록 (중복 수령 방지)
+create table if not exists battle_reward_claims (
+  account_id    uuid references accounts(id) on delete cascade,
+  reward_key    text not null,  -- 'daily_YYYY-MM-DD' or 'weekly_YYYY-MM-DD'
+  rank_achieved int,
+  claimed_at    timestamptz default now(),
+  primary key (account_id, reward_key)
+);
+alter table battle_reward_claims enable row level security;
+create policy "all" on battle_reward_claims for all using (true) with check (true);
+```
+
+---
+
+## 7. 요일 배틀 관리
+
+```sql
+-- 특정 유저의 요일별 팀 조회
+SELECT day_of_week, slots, updated_at
+FROM day_battle_teams
+WHERE account_id = (SELECT id FROM accounts WHERE nickname = '닉네임')
+ORDER BY day_of_week;
+
+-- 오늘 배틀 기록 조회
+SELECT
+  a1.nickname AS attacker,
+  a2.nickname AS defender,
+  br.attacker_won,
+  br.day_of_week,
+  br.created_at
+FROM battle_records br
+JOIN accounts a1 ON a1.id = br.attacker_id
+JOIN accounts a2 ON a2.id = br.defender_id
+WHERE br.battle_date = current_date
+ORDER BY br.created_at DESC;
+
+-- 이번 주 랭킹 조회
+SELECT
+  a.nickname,
+  ws.score,
+  ws.wins,
+  ws.losses
+FROM weekly_scores ws
+JOIN accounts a ON a.id = ws.account_id
+WHERE ws.week_start = date_trunc('week', current_date)::date
+ORDER BY ws.score DESC;
+
+-- 특정 유저 배틀 기록 초기화 (오늘)
+DELETE FROM battle_records
+WHERE battle_date = current_date
+  AND (attacker_id = (SELECT id FROM accounts WHERE nickname = '닉네임')
+    OR defender_id = (SELECT id FROM accounts WHERE nickname = '닉네임'));
+```
+
+---
+
+## 8. 특정 유저 삭제
 
 ```sql
 -- 특정 유저 완전 삭제 (game_saves는 CASCADE로 자동 삭제)
@@ -193,7 +292,7 @@ DELETE FROM accounts WHERE nickname = '닉네임';
 
 ---
 
-## 7. 서버 전체 초기화 (전 유저 삭제)
+## 9. 서버 전체 초기화 (전 유저 삭제)
 
 > ⚠️ **되돌릴 수 없습니다.** 실행 전 반드시 백업할 것.
 
@@ -221,7 +320,7 @@ TRUNCATE TABLE accounts, game_saves CASCADE;
 |------|----------|--------|
 | 150  | 뮤츠     | ★5    |
 | 151  | 뮤       | ★5    |
-| 249  | 루기아   | ★5    |
+| 249  | 루기아   | ★5    |   
 | 250  | 칠색조   | ★5    |
 | 493  | 아르세우스 | ★5  |
 | 144  | 프리저   | ★4    |

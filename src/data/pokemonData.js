@@ -828,3 +828,14 @@ export const TYPE_MOVES = {
   normal:   ['💥 몸통박치기', '🌟 하이퍼빔', '🎯 속이기', '⭐ 유성연속치기', '⚔️ 연속베기'],
   myth:     ['✨ 심판의칼날', '🌟 신의분노', '☄️ 용성군', '🔱 창조의빛', '💥 대폭발'],
 };
+
+// ── 요일별 허용 타입 ──────────────────────────────────────────────────────────
+export const DAY_TYPES = {
+  0: { label: '월요일', short: '월', emoji: '🔥', color: '#F08030', types: ['fire', 'water', 'ice'] },
+  1: { label: '화요일', short: '화', emoji: '🌿', color: '#78C850', types: ['grass', 'poison', 'bug'] },
+  2: { label: '수요일', short: '수', emoji: '⚡', color: '#F8D030', types: ['electric', 'steel', 'rock'] },
+  3: { label: '목요일', short: '목', emoji: '🥊', color: '#C03028', types: ['fighting', 'ground', 'flying'] },
+  4: { label: '금요일', short: '금', emoji: '🔮', color: '#F85888', types: ['psychic', 'ghost', 'dark'] },
+  5: { label: '토요일', short: '토', emoji: '🐉', color: '#7038F8', types: ['dragon', 'fairy'] },
+  6: { label: '일요일', short: '일', emoji: '🐰', color: '#A8A878', types: ['normal'] },
+};
