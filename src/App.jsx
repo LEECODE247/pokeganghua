@@ -1,6 +1,6 @@
 import React, { useReducer, useEffect, useState, useRef, useCallback, createContext, useContext, Component } from 'react';
 import { generateWildPokemon, calculateSellPrice, getEnhanceRate, getEnhanceFailEffect, getEnhanceCost, createPokemonInstance, SELL_ENHANCE_BONUS } from './utils/gameUtils.js';
-import { BALL_CONFIG, POKEMON_NAMES, ALL_POKEMON_BY_RARITY, GEN1_IDS, GEN2_IDS, POKEMON_RARITY_MAP, GYM_CONFIG } from './data/pokemonData.js';
+import { BALL_CONFIG, POKEMON_NAMES, ALL_POKEMON_BY_RARITY, GEN1_IDS, GEN2_IDS, GEN3_IDS, POKEMON_RARITY_MAP, GYM_CONFIG } from './data/pokemonData.js';
 import { EVOLUTIONS } from './data/evolutionData.js';
 import { loadGameState, saveGameState, saveGameStateOnUnload, setSessionToken, getSessionToken } from './supabase.js';
 import HUD from './components/HUD.jsx';
@@ -53,6 +53,10 @@ const INITIAL_STATE = {
   shinyPokedex: [],
   shinyPokedexHalfRewarded: false,
   shinyPokedexRewarded: false,
+  pokedex3HalfRewarded: false,
+  pokedex3Rewarded: false,
+  shinyPokedex3HalfRewarded: false,
+  shinyPokedex3Rewarded: false,
   lastEvolution: null,
 };
 
@@ -61,6 +65,12 @@ const GEN_ALL_SET = new Set([...GEN1_IDS, ...GEN2_IDS]);
 const SHINY_TARGET_IDS = new Set(
   [...(ALL_POKEMON_BY_RARITY[1] || []), ...(ALL_POKEMON_BY_RARITY[2] || []), ...(ALL_POKEMON_BY_RARITY[3] || [])]
     .filter(id => GEN_ALL_SET.has(id))
+);
+// 이로치 도감 대상: 1~3성 3세대 포켓몬
+const GEN3_SET = new Set(GEN3_IDS);
+const SHINY3_TARGET_IDS = new Set(
+  [...(ALL_POKEMON_BY_RARITY[1] || []), ...(ALL_POKEMON_BY_RARITY[2] || []), ...(ALL_POKEMON_BY_RARITY[3] || [])]
+    .filter(id => GEN3_SET.has(id))
 );
 
 function gameReducer(state, action) {
@@ -442,6 +452,36 @@ function gameReducer(state, action) {
         pokedex: state.pokedex.includes(493) ? state.pokedex : [...state.pokedex, 493],
         shinyPokedexRewarded: true,
       };
+    }
+
+    case 'CLAIM_POKEDEX3_HALF_REWARD': {
+      if (state.pokedex3HalfRewarded) return state;
+      const gen3Half = GEN3_IDS.filter(id => state.pokedex.includes(id)).length;
+      if (gen3Half < Math.ceil(GEN3_IDS.length / 2)) return state;
+      return { ...state, fragments: (state.fragments || 0) + 20000, pokedex3HalfRewarded: true };
+    }
+
+    case 'CLAIM_POKEDEX3_REWARD': {
+      if (state.pokedex3Rewarded) return state;
+      const gen3Full = GEN3_IDS.filter(id => state.pokedex.includes(id)).length;
+      if (gen3Full < GEN3_IDS.length) return state;
+      return { ...state, fragments: (state.fragments || 0) + 50000, pokedex3Rewarded: true };
+    }
+
+    case 'CLAIM_SHINY3_HALF_REWARD': {
+      // 3세대 이로치 절반 → 파편 100,000개
+      if (state.shinyPokedex3HalfRewarded) return state;
+      const caught3Half = (state.shinyPokedex || []).filter(id => SHINY3_TARGET_IDS.has(id)).length;
+      if (caught3Half < Math.ceil(SHINY3_TARGET_IDS.size / 2)) return state;
+      return { ...state, fragments: (state.fragments || 0) + 100000, shinyPokedex3HalfRewarded: true };
+    }
+
+    case 'CLAIM_SHINY3_FULL_REWARD': {
+      // 3세대 이로치 완성 → 파편 100,000개
+      if (state.shinyPokedex3Rewarded) return state;
+      const caught3Full = (state.shinyPokedex || []).filter(id => SHINY3_TARGET_IDS.has(id)).length;
+      if (caught3Full < SHINY3_TARGET_IDS.size) return state;
+      return { ...state, fragments: (state.fragments || 0) + 100000, shinyPokedex3Rewarded: true };
     }
 
     case 'CLAIM_COINS': {

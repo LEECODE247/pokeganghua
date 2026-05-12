@@ -149,24 +149,26 @@ export async function fetchBattlePlayers(myAccountId) {
 export function getTodayIndex() {
   return (new Date().getDay() + 6) % 7; // 0=월, 1=화, ..., 6=일
 }
+function toKSTDate(date = new Date()) {
+  const kst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+  return kst.toISOString().split('T')[0];
+}
 export function getTodayDate() {
-  return new Date().toISOString().split('T')[0];
+  return toKSTDate();
 }
 export function getWeekStartDate() {
-  const now = new Date();
-  const day = now.getDay();
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const day = kst.getUTCDay();
   const diff = day === 0 ? 6 : day - 1;
-  const mon = new Date(now);
-  mon.setDate(now.getDate() - diff);
-  return mon.toISOString().split('T')[0];
+  kst.setUTCDate(kst.getUTCDate() - diff);
+  return kst.toISOString().split('T')[0];
 }
 function getLastWeekStartDate() {
-  const now = new Date();
-  const day = now.getDay();
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const day = kst.getUTCDay();
   const diff = day === 0 ? 6 : day - 1;
-  const mon = new Date(now);
-  mon.setDate(now.getDate() - diff - 7);
-  return mon.toISOString().split('T')[0];
+  kst.setUTCDate(kst.getUTCDate() - diff - 7);
+  return kst.toISOString().split('T')[0];
 }
 
 // ── 요일 배틀팀 저장/조회 ────────────────────────────────────

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useGame } from '../App.jsx';
-import { ALL_POKEMON_BY_RARITY, GEN1_IDS, GEN2_IDS, POKEMON_TYPES, TYPE_META } from '../data/pokemonData.js';
+import { ALL_POKEMON_BY_RARITY, GEN1_IDS, GEN2_IDS, GEN3_IDS, POKEMON_TYPES, TYPE_META } from '../data/pokemonData.js';
 import { EVOLUTIONS } from '../data/evolutionData.js';
 import { getPokemonImageUrl, getPokemonShinyImageUrl, getPokemonName, getRarityColor } from '../utils/gameUtils.js';
 
@@ -14,13 +14,16 @@ const RARITY_INFO = [
 
 const GEN1_SET = new Set(GEN1_IDS);
 const GEN2_SET = new Set(GEN2_IDS);
+const GEN3_SET = new Set(GEN3_IDS);
 
 const TABS = [
-  { key: 'all',   label: '전체',  icon: '📖' },
-  { key: 'gen1',  label: '1세대', icon: '🔴' },
-  { key: 'gen2',  label: '2세대', icon: '🟡' },
-  { key: 'shiny', label: '이로치', icon: '✨' },
-  { key: 'evo',   label: '진화표', icon: '🔀' },
+  { key: 'all',    label: '전체',   icon: '📖' },
+  { key: 'gen1',   label: '1세대',  icon: '🔴' },
+  { key: 'gen2',   label: '2세대',  icon: '🟡' },
+  { key: 'gen3',   label: '3세대',  icon: '🟢' },
+  { key: 'shiny',  label: '이로치', icon: '✨' },
+  { key: 'shiny3', label: '✨3세대', icon: '🌟' },
+  { key: 'evo',    label: '진화표', icon: '🔀' },
 ];
 
 // EVOLUTIONS에서 전체 진화 체인 배열을 구성
@@ -201,7 +204,7 @@ function EvolutionTab({ caughtSet }) {
 
   const filteredChains = useMemo(() => {
     if (genFilter === 'all') return ALL_CHAINS;
-    const genSet = genFilter === 'gen1' ? GEN1_SET : GEN2_SET;
+    const genSet = genFilter === 'gen1' ? GEN1_SET : genFilter === 'gen2' ? GEN2_SET : GEN3_SET;
     // 체인의 루트(첫 번째)가 해당 세대에 속한 경우만 표시
     return ALL_CHAINS.filter(chain => genSet.has(chain[0].id));
   }, [genFilter]);
@@ -210,7 +213,7 @@ function EvolutionTab({ caughtSet }) {
     <div>
       {/* 세대 필터 */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-        {[{ key: 'all', label: '전체' }, { key: 'gen1', label: '🔴 1세대' }, { key: 'gen2', label: '🟡 2세대' }].map(f => {
+        {[{ key: 'all', label: '전체' }, { key: 'gen1', label: '🔴 1세대' }, { key: 'gen2', label: '🟡 2세대' }, { key: 'gen3', label: '🟢 3세대' }].map(f => {
           const isActive = genFilter === f.key;
           return (
             <button
@@ -252,7 +255,7 @@ export default function PokedexScreen() {
   const totalCaught = allIds.filter(id => caughtSet.has(id)).length;
   const overallPct = Math.round((totalCaught / totalInGame) * 100);
 
-  const filterSet = activeTab === 'gen1' ? GEN1_SET : activeTab === 'gen2' ? GEN2_SET : null;
+  const filterSet = activeTab === 'gen1' ? GEN1_SET : activeTab === 'gen2' ? GEN2_SET : activeTab === 'gen3' ? GEN3_SET : null;
 
   return (
     <div>
@@ -422,8 +425,129 @@ export default function PokedexScreen() {
         );
       })()}
 
-      {/* 도감 탭들 (전체/1세대/2세대) */}
-      {activeTab !== 'evo' && activeTab !== 'shiny' && (
+      {/* 3세대 이로치 탭 */}
+      {activeTab === 'shiny3' && (() => {
+        const shinySet = new Set(state.shinyPokedex || []);
+        const shiny3TargetIds = [
+          ...(ALL_POKEMON_BY_RARITY[1] || []),
+          ...(ALL_POKEMON_BY_RARITY[2] || []),
+          ...(ALL_POKEMON_BY_RARITY[3] || []),
+        ].filter(id => GEN3_SET.has(id));
+        const totalShiny3 = shiny3TargetIds.length;
+        const halfTarget3 = Math.ceil(totalShiny3 / 2);
+        const caughtShiny3 = shiny3TargetIds.filter(id => shinySet.has(id)).length;
+        const pct3 = Math.round((caughtShiny3 / totalShiny3) * 100);
+        return (
+          <div>
+            <div style={{
+              background: 'var(--surface, var(--card))',
+              border: '1px solid #69f0ae44', borderRadius: 12,
+              padding: '14px 16px', marginBottom: 14,
+              boxShadow: caughtShiny3 > 0 ? '0 0 12px rgba(105,240,174,0.2)' : 'none',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#69f0ae' }}>🌟 3세대 이로치 도감 (1~3성)</span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text2)' }}>{caughtShiny3} / {totalShiny3} ({pct3}%)</span>
+              </div>
+              <div style={{ height: 7, background: 'var(--bg)', borderRadius: 99, overflow: 'hidden', marginBottom: 10 }}>
+                <div style={{
+                  height: '100%', borderRadius: 99, width: `${pct3}%`,
+                  background: 'linear-gradient(90deg, #69f0ae, #ffd600)',
+                  transition: 'width 0.4s ease',
+                }} />
+              </div>
+              {/* 절반 보상 */}
+              <div style={{
+                background: state.shinyPokedex3HalfRewarded ? 'rgba(105,240,174,0.08)' : 'var(--bg)',
+                border: `1px solid ${caughtShiny3 >= halfTarget3 ? '#69f0ae44' : 'var(--border)'}`,
+                borderRadius: 8, padding: '8px 12px', marginTop: 8,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+              }}>
+                <div style={{ fontSize: '0.75rem', color: caughtShiny3 >= halfTarget3 ? '#69f0ae' : 'var(--text2)', fontWeight: 700, flexShrink: 0 }}>
+                  절반 달성 ({halfTarget3}마리)
+                </div>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text2)', flex: 1 }}>💎 특별재화 100,000개</span>
+                {caughtShiny3 >= halfTarget3 && !state.shinyPokedex3HalfRewarded && (
+                  <button className="btn" style={{ background: '#69f0ae', color: '#000', fontWeight: 800, fontSize: '0.72rem', padding: '4px 10px', borderRadius: 6, flexShrink: 0 }}
+                    onClick={() => dispatch({ type: 'CLAIM_SHINY3_HALF_REWARD' })}>🎁 수령</button>
+                )}
+                {state.shinyPokedex3HalfRewarded && <span style={{ fontSize: '0.72rem', color: '#69f0ae', fontWeight: 700, flexShrink: 0 }}>✅ 완료</span>}
+                {caughtShiny3 < halfTarget3 && !state.shinyPokedex3HalfRewarded && <span style={{ fontSize: '0.72rem', color: 'var(--text2)', flexShrink: 0 }}>🔒 {halfTarget3 - caughtShiny3}마리 남음</span>}
+              </div>
+              {/* 완성 보상 */}
+              <div style={{
+                background: state.shinyPokedex3Rewarded ? 'rgba(255,214,0,0.08)' : 'var(--bg)',
+                border: `1px solid ${caughtShiny3 >= totalShiny3 ? '#ffd60044' : 'var(--border)'}`,
+                borderRadius: 8, padding: '8px 12px', marginTop: 8,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+              }}>
+                <div style={{ fontSize: '0.75rem', color: caughtShiny3 >= totalShiny3 ? '#ffd600' : 'var(--text2)', fontWeight: 700, flexShrink: 0 }}>
+                  완성 보상 ({totalShiny3}마리)
+                </div>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text2)', flex: 1 }}>💎 특별재화 100,000개</span>
+                {caughtShiny3 >= totalShiny3 && !state.shinyPokedex3Rewarded && (
+                  <button className="btn" style={{ background: '#ffd600', color: '#000', fontWeight: 800, fontSize: '0.72rem', padding: '4px 10px', borderRadius: 6, flexShrink: 0 }}
+                    onClick={() => dispatch({ type: 'CLAIM_SHINY3_FULL_REWARD' })}>🎁 수령</button>
+                )}
+                {state.shinyPokedex3Rewarded && <span style={{ fontSize: '0.72rem', color: '#ffd600', fontWeight: 700, flexShrink: 0 }}>✅ 완료</span>}
+                {caughtShiny3 < totalShiny3 && !state.shinyPokedex3Rewarded && <span style={{ fontSize: '0.72rem', color: 'var(--text2)', flexShrink: 0 }}>🔒 {totalShiny3 - caughtShiny3}마리 남음</span>}
+              </div>
+            </div>
+            {/* 3세대 이로치 그리드 */}
+            {[3,2,1].map(rarity => {
+              const ids = (ALL_POKEMON_BY_RARITY[rarity] || []).filter(id => GEN3_SET.has(id));
+              if (ids.length === 0) return null;
+              const caughtCount = ids.filter(id => shinySet.has(id)).length;
+              const color = getRarityColor(rarity);
+              return (
+                <div key={rarity} style={{ marginBottom: 20 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ color, fontWeight: 800, fontSize: '0.9rem' }}>{'★'.repeat(rarity)} {['','일반','희귀','영웅'][rarity]}</span>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text2)' }}>{caughtCount} / {ids.length}</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))', gap: 6 }}>
+                    {ids.map(id => {
+                      const isCaught = shinySet.has(id);
+                      return (
+                        <div key={id} style={{
+                          background: isCaught ? 'rgba(105,240,174,0.08)' : 'var(--surface, var(--card))',
+                          border: `1px solid ${isCaught ? '#69f0ae55' : 'var(--border)'}`,
+                          borderRadius: 10, padding: '6px 4px', textAlign: 'center',
+                          opacity: isCaught ? 1 : 0.4,
+                          boxShadow: isCaught ? '0 0 8px rgba(105,240,174,0.3)' : 'none',
+                        }}>
+                          <img
+                            src={isCaught ? getPokemonShinyImageUrl(id) : getPokemonImageUrl(id)}
+                            alt={isCaught ? getPokemonName(id) : '???'}
+                            style={{
+                              width: 48, height: 48, objectFit: 'contain', imageRendering: 'pixelated',
+                              filter: isCaught ? 'drop-shadow(0 0 4px rgba(105,240,174,0.8))' : 'brightness(0) contrast(0.3)',
+                            }}
+                          />
+                          <div style={{ fontSize: '0.6rem', color: isCaught ? '#69f0ae' : 'var(--text2)', marginTop: 2, fontWeight: isCaught ? 700 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {isCaught ? getPokemonName(id) : '???'}
+                          </div>
+                          {isCaught && (
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginTop: 3, flexWrap: 'wrap' }}>
+                              {(POKEMON_TYPES[id] || ['normal']).map(t => {
+                                const meta = TYPE_META[t] || { label: t, color: '#888' };
+                                return <span key={t} style={{ background: meta.color, color: '#fff', fontSize: '0.42rem', fontWeight: 800, padding: '1px 4px', borderRadius: 6 }}>{meta.label}</span>;
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
+
+      {/* 도감 탭들 (전체/1세대/2세대/3세대) */}
+      {activeTab !== 'evo' && activeTab !== 'shiny' && activeTab !== 'shiny3' && (
         <>
           {(activeTab === 'all' || activeTab === 'gen1') && (
             <GenCompletionCard
@@ -455,6 +579,22 @@ export default function PokedexScreen() {
               rewarded={state.pokedex2Rewarded}
               rewardDesc="랜덤 +15강 S급 ★4 포켓몬"
               onClaim={() => dispatch({ type: 'CLAIM_POKEDEX2_REWARD' })}
+            />
+          )}
+          {(activeTab === 'all' || activeTab === 'gen3') && (
+            <GenCompletionCard
+              title="3세대 도감"
+              icon="🟢"
+              ids={GEN3_IDS}
+              caughtSet={caughtSet}
+              rewardColor="#69f0ae"
+              halfTarget={Math.ceil(GEN3_IDS.length / 2)}
+              halfRewarded={state.pokedex3HalfRewarded}
+              halfRewardDesc="💎 파편 20,000개"
+              onClaimHalf={() => dispatch({ type: 'CLAIM_POKEDEX3_HALF_REWARD' })}
+              rewarded={state.pokedex3Rewarded}
+              rewardDesc="💎 파편 50,000개"
+              onClaim={() => dispatch({ type: 'CLAIM_POKEDEX3_REWARD' })}
             />
           )}
 
