@@ -37,17 +37,20 @@ export function getPokemonName(id) {
 
 // 글로벌 여행 — 전체 풀에서 랜덤 추첨
 // 출현 확률: ★5=0.5%, ★4=2%, ★3=16%, ★2=29.5%, ★1=52%
-export function generateWildPokemon() {
+// genFilter: null=전체, 'gen12'=1·2세대, 'gen3'=3세대
+export function generateWildPokemon(genFilter = null) {
   const roll = Math.random();
   let rarity;
-  if (roll < 0.005)      rarity = 5;  // 0.5% 신화
-  else if (roll < 0.025) rarity = 4;  // 2% 전설
-  else if (roll < 0.185) rarity = 3;  // 16% 영웅
-  else if (roll < 0.48)  rarity = 2;  // 29.5% 희귀
-  else                   rarity = 1;  // 52% 일반
+  if (roll < 0.005)      rarity = 5;
+  else if (roll < 0.025) rarity = 4;
+  else if (roll < 0.185) rarity = 3;
+  else if (roll < 0.48)  rarity = 2;
+  else                   rarity = 1;
 
-  // 진화로만 얻을 수 있는 포켓몬은 야생 출현 제외
-  const pool = ALL_POKEMON_BY_RARITY[rarity].filter(id => !WILD_EXCLUDED.has(id));
+  let pool = ALL_POKEMON_BY_RARITY[rarity].filter(id => !WILD_EXCLUDED.has(id));
+  if (genFilter === 'gen12') pool = pool.filter(id => id <= 251);
+  else if (genFilter === 'gen3') pool = pool.filter(id => id >= 252);
+  if (pool.length === 0) pool = ALL_POKEMON_BY_RARITY[rarity].filter(id => !WILD_EXCLUDED.has(id));
   const pokemonId = pool[Math.floor(Math.random() * pool.length)];
   return createPokemonInstance(pokemonId, rarity);
 }

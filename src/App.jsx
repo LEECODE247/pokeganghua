@@ -22,6 +22,7 @@ const INITIAL_STATE = {
   fragments: 0,
   screen: 'main',
   wildPokemon: null,
+  wildGenFilter: null,
   captureResult: null,
   captureFailStreak: 0,
   enhancingPokemonId: null,
@@ -80,12 +81,12 @@ function gameReducer(state, action) {
       return { ...state, screen: action.screen };
 
     case 'START_ROULETTE': {
-      const pokemon = generateWildPokemon();
-      return { ...state, wildPokemon: pokemon, captureResult: null, screen: 'capture' };
+      const pokemon = generateWildPokemon(action.genFilter ?? null);
+      return { ...state, wildPokemon: pokemon, captureResult: null, screen: 'capture', wildGenFilter: action.genFilter ?? null };
     }
 
     case 'GENERATE_WILD_POKEMON': {
-      const pokemon = generateWildPokemon();
+      const pokemon = generateWildPokemon(state.wildGenFilter ?? null);
       return { ...state, wildPokemon: pokemon, captureResult: null };
     }
 

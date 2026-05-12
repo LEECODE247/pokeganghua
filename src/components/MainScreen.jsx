@@ -306,14 +306,26 @@ export default function MainScreen() {
 
       {/* 여행하기 버튼 */}
       <div className="roulette-section">
-        <button
-          className="roulette-btn"
-          onClick={() => dispatch({ type: 'START_ROULETTE' })}
-        >
-          <span className="roulette-btn-icon">🌍</span>
-          <span className="roulette-btn-text">여행하기</span>
-          <span className="roulette-btn-sub">포켓몬을 찾아나선다...</span>
-        </button>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 0 }}>
+          <button
+            className="roulette-btn"
+            style={{ flex: 1 }}
+            onClick={() => dispatch({ type: 'START_ROULETTE', genFilter: 'gen12' })}
+          >
+            <span className="roulette-btn-icon">🌍</span>
+            <span className="roulette-btn-text" style={{ fontSize: '0.95rem' }}>1·2세대 여행</span>
+            <span className="roulette-btn-sub">관동·성도 지방</span>
+          </button>
+          <button
+            className="roulette-btn"
+            style={{ flex: 1, background: 'linear-gradient(135deg, #1b5e20 0%, #2e7d32 60%, #388e3c 100%)' }}
+            onClick={() => dispatch({ type: 'START_ROULETTE', genFilter: 'gen3' })}
+          >
+            <span className="roulette-btn-icon">🟢</span>
+            <span className="roulette-btn-text" style={{ fontSize: '0.95rem' }}>3세대 여행</span>
+            <span className="roulette-btn-sub">호연 지방</span>
+          </button>
+        </div>
 
         {/* 업데이트 공지 게시판 */}
         <div className="card" style={{ padding: '10px 0 4px' }}>
@@ -373,7 +385,8 @@ export default function MainScreen() {
       <div className="card" style={{ marginBottom: 0 }}>
         <div className="section-title">팁</div>
         <div style={{ fontSize: '0.8rem', color: 'var(--text2)', lineHeight: 1.8 }}>
-          🌍 여행으로 1·2세대 포켓몬 랜덤 출현<br/>
+          🌍 1·2세대 여행 — 관동·성도 포켓몬 출현<br/>
+          🟢 3세대 여행 — 호연 포켓몬 출현<br/>
           ⭐ 전설 포켓몬은 2% 확률 — 만나면 놓치지 마세요!<br/>
           🌟 신화 <span style={{ color: '#FF6B00', fontWeight: 700 }}>아르세우스</span>는 0.5% — 마스터볼로만 포획 가능!<br/>
           ⚗️ 강화 +15부터 성공 시 전투력이 <span style={{ color: '#e040fb', fontWeight: 700 }}>2배</span><br/>
